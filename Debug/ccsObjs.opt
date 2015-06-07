@@ -1,0 +1,1 @@
+"./EMouse.obj" "./InfSen.obj" "./Motor.obj" "./NEC.obj" "./PID.obj" "./Seg.obj" "./UART0.obj" "./interrupt.obj" "./tm4c123gh6pm_startup_ccs.obj" "./uartstdio.obj" "D:/Cygwin64/home/HuangKan/TivaWare/driverlib/ccs/Debug/driverlib.lib" "../tm4c123gh6pm.cmd" -l"libc.a" 
