@@ -9,19 +9,27 @@
 #include "Seg.h"
 #include "Motor.h"
 #include "PID.h"
+#include "utils/uartstdio.h"
+#include "driverlib/qei.h"
 //私有宏定义
 #define KP_INC_DEC 0.1
+#define PWM_INC_DEC 50
 //Tech Get，需要初始化的变量要在.c源文件中定义
 //NEC命令状态机状态
 NECCommand necCommandMenuStatus = WaitCommand;
 uint32_t freqToSet = 0;
 
 //To Adapt, 需要控制的外部变量
-#include "Motor.h"
-
-//
+//当前PWM脉宽
 extern uint16_t g_L_Cur_PWM;
 extern uint16_t g_R_Cur_PWM;
+//
+extern uint8_t g_L_Cur_Dir;
+extern uint8_t g_R_Cur_Dir;
+//
+extern float g_L_Sample_RPS;//采样到的转速
+extern float g_R_Sample_RPS;
+//PID算法Kp值
 extern float g_L_Kp;
 extern float g_R_Kp;
 
@@ -37,77 +45,75 @@ extern float g_R_Kp;
 #include "driverlib/interrupt.h"
 #include "driverlib/rom.h"
 
+#include "Seg.h"
+//Seg显示器显示当前PWM脉宽
+void Seg_Update(void)
+{
+    Seg_Display_Num((uint32_t)(100*(g_L_Cur_PWM/10)+g_R_Cur_PWM/10.0));
+}
+
+//TODO 在这里定义按键的功能，注意返回WaitCommand状态
+//NECCommand的类型在头文件中定义
 NECCommand NECCommandExecute(NECCommand necCommand)
 {
 	//首次执行命令
 	switch(necCommand){
-		case(Plus):{
-		    PID_Stop();
-			PID_Move(1,1,DEBUG_RPS,DEBUG_RPS);
-			return WaitCommand;
-		}
-		case(Minus):{
-		    PID_Stop();
-		    PID_Move(0,0,DEBUG_RPS,DEBUG_RPS);
-			return WaitCommand;
-		}
-		case(FastLeft):{
-		    PID_Stop();
-		    PID_Move(0,1,DEBUG_RPS,DEBUG_RPS);
-			return WaitCommand;
-		}
-		case(FastRight):{
-		    PID_Stop();
-		    PID_Move(1,0,DEBUG_RPS,DEBUG_RPS);
-			return WaitCommand;
-		}
-		case(Pause):{
-		    //停止
-		    PID_Stop();
-			Motor_Move(1,1,1,1);
-			return WaitCommand;
-		}
-		case(Num5):{
-		    g_L_Cur_PWM += 50;
-		    g_R_Cur_PWM += 50;
-		    Motor_Move(1,1,g_L_Cur_PWM,g_R_Cur_PWM);
-		    return WaitCommand;
-		}
-        case(Num4):{
-            g_L_Cur_PWM -= 50;
-            g_R_Cur_PWM -= 50;
-            Motor_Move(1,1,g_L_Cur_PWM,g_R_Cur_PWM);
-            return WaitCommand;
-        }
-        case(Num1):{
-            g_L_Cur_PWM = 50;
-            g_R_Cur_PWM = 50;
-            Motor_Move(1,1,g_L_Cur_PWM,g_R_Cur_PWM);
-            return WaitCommand;
-        }
-        case(Num0):{
-            g_L_Cur_PWM = 0;
-            g_R_Cur_PWM = 0;
-            Motor_Move(1,1,g_L_Cur_PWM,g_R_Cur_PWM);
-            return WaitCommand;
-        }
-        case(Num7):{
-            g_L_Kp -= KP_INC_DEC;
-            return WaitCommand;
-        }
-        case(Num8):{
-            g_L_Kp += KP_INC_DEC;
-            return WaitCommand;
-        }
-        case(Num6):{
-            g_R_Kp -= KP_INC_DEC;
-            return WaitCommand;
-        }
-        case(Num9):{
-            g_R_Kp += KP_INC_DEC;
-            return WaitCommand;
-        }
-		default: return WaitCommand;
+	case(Pause):{
+	    Motor_Stop();
+	    return WaitCommand;
+	}
+    case(Plus):{
+        Motor_Move(g_L_Cur_Dir, g_R_Cur_Dir, g_L_Cur_PWM, g_R_Cur_PWM);
+        return WaitCommand;
+    }
+    case(Minus):{
+        //反向移动，不只是倒退的意思
+        Motor_Move((1-g_L_Cur_Dir), (1-g_R_Cur_Dir), g_L_Cur_PWM, g_R_Cur_PWM);
+        return WaitCommand;
+    }
+    case(Num0):{
+        g_L_Cur_PWM += PWM_INC_DEC;
+        g_R_Cur_PWM += PWM_INC_DEC;
+        Seg_Update();
+        return WaitCommand;
+    }
+    case(Num100Plus):{
+        g_L_Cur_PWM += PWM_INC_DEC;
+        Seg_Update();
+        return WaitCommand;
+    }
+    case(Num200Plus):{
+        g_R_Cur_PWM += PWM_INC_DEC;
+        Seg_Update();
+        return WaitCommand;
+    }
+    case(Num1):{
+        g_L_Cur_PWM -= PWM_INC_DEC;
+        g_R_Cur_PWM -= PWM_INC_DEC;
+        Seg_Update();
+        return WaitCommand;
+    }
+    case(Num2):{
+        g_L_Cur_PWM -= PWM_INC_DEC;
+        Seg_Update();
+        return WaitCommand;
+    }
+    case(Num3):{
+        g_R_Cur_PWM -= PWM_INC_DEC;
+        Seg_Update();
+        return WaitCommand;
+    }
+    case(Channel):{
+        g_L_Sample_RPS = QEIVelocityGet(LEFT_QEI)/LINES;
+        g_R_Sample_RPS = QEIVelocityGet(RIGHT_QEI)/LINES;
+        return WaitCommand;
+    }
+    case(ChannelPlus):{
+        UARTprintf("Left 512*rps:  %d\n",(uint32_t)(g_L_Sample_RPS*LINES));
+        UARTprintf("Right 512*rps: %d\n",(uint32_t)(g_R_Sample_RPS*LINES));
+        return WaitCommand;
+    }
+    default: return WaitCommand;
 	}
 }
 
@@ -115,17 +121,21 @@ void NEC_Init(void)
 {
 	//LED灯初始化
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
-	GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3);
-
+	GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);
+	//熄灭LED灯
+	GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3,0x00);
 	InfraPortInit();
 	NECTimerInit();
+	//刷新Seg显示器
+	Seg_Update();
 }
 
 void InfraPortInit()
 {
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
 	GPIOPinTypeGPIOInput(INFRA_RED_PORT, INFRA_RED_PIN);
-	GPIOPadConfigSet(INFRA_RED_PORT, INFRA_RED_PIN, GPIO_STRENGTH_2MA,	GPIO_PIN_TYPE_STD_WPU);
+	GPIOPadConfigSet(INFRA_RED_PORT, INFRA_RED_PIN, GPIO_STRENGTH_2MA, \
+	        GPIO_PIN_TYPE_STD_WPU);
 	//设置中断
 	GPIOIntTypeSet(INFRA_RED_PORT, INFRA_RED_PIN, GPIO_FALLING_EDGE);
 	GPIOIntRegister(INFRA_RED_PORT, InfraPortIntHandler);
@@ -155,7 +165,8 @@ void NECTimerInit()
 }
 void InfraPortIntHandler()
 {
-	//TODO PE0中断被触发了两次，所以LED会亮两次，第一次亮后会灭，第二次不会灭（传输有问题）
+	//TODO PE0中断被触发了两次，所以LED会亮两次，
+    //第一次亮后会灭，第二次不会灭（传输有问题）
 	//下降沿触发中断后
 	GPIOIntClear(INFRA_RED_PORT, GPIO_INT_PIN_0);
 	//点亮三色LED
@@ -196,26 +207,29 @@ void NECTimerIntHandler()
 		}
 		//进入状态机，NEC解码
 		machineState = StateMachine(machineState, bit);
-		//	if( (TransmitSuccess==machineState) || (OverfullLowLevel==machineState) || (NotEnoughHighLevel==machineState) || (OverfullLeadingOnes==machineState) || (RepeatSignal==machineState)){
-		if( (TransmitSuccess==machineState) ||  (RepeatSignal==machineState) ||(TransmitError==machineState) ){
+		if( (TransmitSuccess==machineState) || (RepeatSignal==machineState) \
+		        ||(TransmitError==machineState) ){
 			//关闭三色LED
-			GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3,0x00);
+			GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3,0x00);
 			//传输结束，保留数据
 			NECReceiveReset(true);
 			if(TransmitSuccess==machineState){
 				//响应相应的命令
 				necCommand = NECCommandExtract(ui32NECEncoded);
 				//命令没有问题
-				if( (necCommand!=AddressError)&&(necCommand!=ValidateError)&&(necCommand!=UnknownCommand) ){
+				if( (necCommand!=AddressError)&&(necCommand!=ValidateError) \
+				        &&(necCommand!=UnknownCommand) ){
 					if(WaitCommand == necCommandMenuStatus){
 						necCommandMenuStatus = NECCommandExecute(necCommand);
 					}
 					else
-						necCommandMenuStatus = NECCommandMenu(necCommandMenuStatus, necCommand);
+						necCommandMenuStatus =  \
+						NECCommandMenu(necCommandMenuStatus, necCommand);
 				}
 			}
 			else if(RepeatSignal==machineState)
-				necCommandMenuStatus = NECCommandMenu(necCommandMenuStatus, Repeat);
+				necCommandMenuStatus = \
+				        NECCommandMenu(necCommandMenuStatus, Repeat);
 		}
 	}
 
@@ -258,9 +272,11 @@ NECMachineStatue StateMachine(NECMachineStatue stateNow, uint8_t bit){
 			//收到低电平确认信号
 			else if(0==bit){
 				//收到0，1~2个高电平为0
-				if( (ui8CountOnesCounter>=1)&&(ui8CountOnesCounter<=2) ) NECReceiveBit(0);
+				if( (ui8CountOnesCounter>=1)&&(ui8CountOnesCounter<=2) )
+				    NECReceiveBit(0);
 				//收到1，3~4个高电平为1
-				else if( (ui8CountOnesCounter>=3)&&(ui8CountOnesCounter<=4) ) NECReceiveBit(1);
+				else if( (ui8CountOnesCounter>=3)&&(ui8CountOnesCounter<=4) )
+				    NECReceiveBit(1);
 				//等待下次接收
 				return WaitOne;
 			}
@@ -329,8 +345,8 @@ NECCommand NECCommandExtract(uint32_t ui32NECEncoded)
 	case(0x15):return Plus; break;//+
 	case(0x09):return Equal; break;//EQ
 	case(0x16):return Num0; break;//0
-	case(0x19):return Num100plus; break;//100+
-	case(0x0D):return Num200plus; break;//200+
+	case(0x19):return Num100Plus; break;//100+
+	case(0x0D):return Num200Plus; break;//200+
 	case(0x0C):return Num1; break;//1
 	case(0x18):return Num2; break;//2
 	case(0x5E):return Num3; break;//3
@@ -346,7 +362,7 @@ NECCommand NECCommandExtract(uint32_t ui32NECEncoded)
 
 //输入参数，当前状态，命令
 //输出，返回状态
-NECCommand NECCommandMenu(NECCommand necCommandMenuStatus, NECCommand necCommand)
+NECCommand NECCommandMenu(NECCommand necCommandMenuStatus,NECCommand necCommand)
 {
 	switch(necCommandMenuStatus){
 	case(ChannelMinus):

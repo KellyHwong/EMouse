@@ -4,9 +4,12 @@
 #include <stdint.h>
 
 //公有宏定义
-#define DEBUG_MOTOR_PWM_WIDTH 40
+#define DEBUG_MOTOR_PWM_WIDTH 40//
 #define QEI_UPDATE_TIME PID_DELAY_TIME//Veciloty update time, in mS
-#define QEI_LEFT_MOTOR_FORWARD (-1)
+
+#define LINES 512.0//电机线速度
+
+#define QEI_LEFT_MOTOR_FORWARD (-1)//这些好像没什么用
 #define QEI_LEFT_MOTOR_BACKWARD (1)
 #define QEI_RIGHT_MOTOR_FORWARD (1)
 #define QEI_RIGHT_MOTOR_BACKWARD (-1)
@@ -39,5 +42,9 @@ void Motor_Init_QEI(void);
 void Motor_Left_PWM_Width(uint32_t);
 void Motor_Right_PWM_Width(uint32_t);
 void Motor_Move(uint8_t, uint8_t, uint16_t, uint16_t);
+
+void Motor_Start(void);
+void Motor_Stop(void);
+void Motor_Break(void);
 
 #endif

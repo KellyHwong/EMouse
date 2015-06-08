@@ -22,6 +22,7 @@ PID.obj: D:/Cygwin64/home/HuangKan/TivaWare/inc/hw_gpio.h
 PID.obj: D:/Cygwin64/home/HuangKan/TivaWare/inc/tm4c123gh6pm.h
 PID.obj: ../Motor.h
 PID.obj: D:/Cygwin64/home/HuangKan/TivaWare/driverlib/qei.h
+PID.obj: ../Seg.h
 
 ../PID.c: 
 ../PID.h: 
@@ -45,3 +46,4 @@ D:/Cygwin64/home/HuangKan/TivaWare/inc/hw_gpio.h:
 D:/Cygwin64/home/HuangKan/TivaWare/inc/tm4c123gh6pm.h: 
 ../Motor.h: 
 D:/Cygwin64/home/HuangKan/TivaWare/driverlib/qei.h: 
+../Seg.h: 

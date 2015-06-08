@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 //公有宏定义
-#define DEBUG_RPS 45.0
+#define DEBUG_RPS 40.0
 #define PID_DELAY_TIME 1000//单位mS
 
 void PID_Init(void);

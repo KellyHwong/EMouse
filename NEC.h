@@ -11,6 +11,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "inc/hw_ints.h"
+
+void Seg_Update(void);
+
 //To Adapt，根据接口的端口做相应的修改
 #define INFRA_RED_PORT GPIO_PORTE_BASE
 #define INFRA_RED_PIN GPIO_PIN_0
@@ -38,33 +41,33 @@ typedef enum
 typedef enum
 {
 	//0~9按顺序对应
-	Num0,
-	Num1,
-	Num2,
-	Num3,
-	Num4,
-	Num5,
-	Num6,
-	Num7,
-	Num8,
-	Num9,
-	Repeat,
+	Num0,//数字0
+	Num1,//数字1
+	Num2,//数字2
+	Num3,//数字3
+	Num4,//数字4
+	Num5,//数字5
+	Num6,//数字6
+	Num7,//数字7
+	Num8,//数字8
+	Num9,//数字9
+	Repeat,//重复信号，按着按钮不动时接收到
 	AddressError,//用户码错误
 	ValidateError,//校验错误
 	UnknownCommand,//未知
-	ChannelMinus,
-	Channel,
-	ChannelPlus,
-	FastLeft,
-	FastRight,
-	Pause,
-	Minus,
-	Plus,
-	Equal,
-	Num100plus,
-	Num200plus,
+	ChannelMinus,//CH-
+	Channel,//CH
+	ChannelPlus,//CH+
+	FastLeft,//快退
+	FastRight,//快进
+	Pause,//暂停
+	Minus,//减号
+	Plus,//加号
+	Equal,//EQ
+	Num100Plus,//100+
+	Num200Plus,//200+
 	//为命令状态机增加一个状态
-	WaitCommand
+	WaitCommand//等待命令态
 }NECCommand;
 
 NECMachineStatue machineState;

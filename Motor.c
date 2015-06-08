@@ -14,8 +14,14 @@
 #include "inc/tm4c123gh6pm.h"
 #include "driverlib/qei.h"
 
-uint16_t g_L_Cur_PWM = 0;
-uint16_t g_R_Cur_PWM = 0;
+uint16_t g_L_Cur_PWM = 1;//初始化PWM脉宽为1
+uint16_t g_R_Cur_PWM = 1;
+uint8_t g_L_Cur_Dir = 1;
+uint8_t g_R_Cur_Dir = 1;
+float g_L_Sample_RPS = 0;//采样到的转速，初始化为0
+float g_R_Sample_RPS = 0;
+
+#define BREAK_TIME 10//单位mS
 
 void Motor_Init_PWM(void)
 {
@@ -47,7 +53,7 @@ void Motor_Init_PWM(void)
     PWMGenPeriodSet(PWM0_BASE, PWM_GEN_1, period);
     PWMGenPeriodSet(PWM0_BASE, PWM_GEN_3, period);
     PWMGenPeriodSet(PWM1_BASE, PWM_GEN_1, period);
-    //设置PWM脉宽
+    //设置PWM脉宽，1是最小值，表示电机不转动
     PWMPulseWidthSet(PWM0_BASE, PWM_OUT_2, 1);
     PWMPulseWidthSet(PWM0_BASE, PWM_OUT_3, 1);
     PWMPulseWidthSet(PWM0_BASE, PWM_OUT_6, 1);
@@ -101,8 +107,6 @@ void Motor_Init_QEI(void)
     QEIVelocityEnable(QEI1_BASE);
 }
 
-
-
 void Motor_Init(void)
 {
     Motor_Init_PWM();
@@ -122,11 +126,38 @@ void Motor_Right_PWM_Width(uint32_t width)
     PWMPulseWidthSet(PWM1_BASE, PWM_OUT_3, width);
 }
 
+//不改变当前PWM脉宽，以先前的脉宽启动电机
+//注意，不能改变电机方向！
+void Motor_Start(void)
+{
+    Motor_Left_PWM_Width(g_L_Cur_PWM);
+    Motor_Right_PWM_Width(g_R_Cur_PWM);
+}
+
+//停止电机，不改变当前PWM脉宽
+void Motor_Stop(void)
+{
+    Motor_Left_PWM_Width(1);
+    Motor_Right_PWM_Width(1);
+}
+
+//刹车，即反向转动一定的时间
+void Motor_Break(void)
+{
+    Motor_Move((1-g_L_Cur_Dir), (1-g_R_Cur_Dir), g_L_Cur_PWM, g_R_Cur_PWM);
+    SysCtlDelay(SysCtlClockGet()/3000*BREAK_TIME);
+    Motor_Stop();
+}
+
+//改变当前PWM脉宽，启动电机
+//可以控制电机方向
 void Motor_Move(uint8_t leftCtl, uint8_t rightCtl, \
     uint16_t leftWidth, uint16_t rightWidth)
 {
     g_L_Cur_PWM = leftWidth;
     g_R_Cur_PWM = rightWidth;
+    g_L_Cur_Dir = leftCtl;
+    g_R_Cur_Dir = rightCtl;
     //1向前，0向后
     if (1 == leftCtl)
     {

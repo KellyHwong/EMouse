@@ -25,7 +25,8 @@
 //私有定义
 #define MAX_RPS 50//限制rps输出幅度
 #define MAX_PWM 200//
-
+//
+#define BOUNDARY 45.0
 //私有变量及其初始化
 //PID系数
 float g_L_Kp = 1;
@@ -42,8 +43,8 @@ float g_R_Kd = 0;
 //float g_L_B = 0;//14.831;//rps = A*PWM + B
 //float g_R_A = 0.1352;//0.0767;//rps与PWM的线性关系
 //float g_R_B = 0;//18.132;//rps = A*PWM + B
+
 //rps与PWM的分段线性关系
-#define BOUNDARY 40.0
 float g_L_A = 0.2156;
 float g_L_A1 = 0.0355;
 float g_L_B1 = 32.583;

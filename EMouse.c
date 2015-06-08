@@ -39,13 +39,7 @@ int main(void)
     //
     while (1)
     {
-        //ui8Value = InfSen_Read();
-        //UARTprintf("DIRECTION0 :%d\n",QEIDirectionGet(RIGHT_QEI));
-        //UARTprintf("DIRECTION1 :%d\n",QEIDirectionGet(LEFT_QEI));
-        UARTprintf("RPS RIGHT:%d\n",QEIVelocityGet(RIGHT_QEI)/512);
-        UARTprintf("RPS LEFT :%d\n",QEIVelocityGet(LEFT_QEI)/512);
-        //1000*QEIVelocityGet(LEFT_QEI)/QEI_UPDATE_TIME/512//rps
-        SysCtlDelay(SysCtlClockGet()/3/2);
+        // Do nothing
     }
     return 1;
 }
