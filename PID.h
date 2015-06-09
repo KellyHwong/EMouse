@@ -12,7 +12,7 @@
 
 //公有宏定义
 #define DEBUG_RPS 40.0
-#define PID_DELAY_TIME 1000//单位mS
+#define PID_DELAY_TIME 10//单位mS
 
 void PID_Init(void);
 void PID_Init_Timer(void);

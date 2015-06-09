@@ -93,12 +93,15 @@ void Motor_Init_QEI(void)
     QEIConfigure(QEI0_BASE,QEI_CONFIG_CAPTURE_A_B|QEI_CONFIG_NO_RESET|
                 QEI_CONFIG_QUADRATURE|QEI_CONFIG_NO_SWAP, 0x0FFFFFFFF);
     QEIConfigure(QEI1_BASE,QEI_CONFIG_CAPTURE_A_B|QEI_CONFIG_NO_RESET|
-                QEI_CONFIG_QUADRATURE|QEI_CONFIG_NO_SWAP, 0x0FFFFFFFF);
+                QEI_CONFIG_QUADRATURE|QEI_CONFIG_NO_SWAP, 0x0FFFFFFFF);//512*6*2-1);
     //QEI速度配置
     QEIVelocityConfigure(QEI0_BASE,QEI_VELDIV_1,QEI_UPDATE_TIME* \
             SysCtlClockGet()/1000);
     QEIVelocityConfigure(QEI1_BASE,QEI_VELDIV_1,QEI_UPDATE_TIME* \
             SysCtlClockGet()/1000);
+    //初始化QEI位移为0
+    QEIPositionSet(QEI0_BASE,0);
+    QEIPositionSet(QEI1_BASE,0);
     //QEI模块使能
     QEIEnable(QEI0_BASE);
     QEIEnable(QEI1_BASE);
@@ -147,6 +150,9 @@ void Motor_Break(void)
     Motor_Move((1-g_L_Cur_Dir), (1-g_R_Cur_Dir), g_L_Cur_PWM, g_R_Cur_PWM);
     SysCtlDelay(SysCtlClockGet()/3000*BREAK_TIME);
     Motor_Stop();
+    //不改变当前方向
+    g_L_Cur_Dir = 1 - g_L_Cur_Dir;
+    g_R_Cur_Dir = 1 - g_R_Cur_Dir;
 }
 
 //改变当前PWM脉宽，启动电机

@@ -11,5 +11,6 @@
 #include <stdbool.h>
 
 extern void Seg_Display_Num(uint32_t dat);
+void Seg_Update(void);
 
 #endif /* SEG_H_ */

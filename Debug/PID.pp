@@ -17,12 +17,15 @@ PID.obj: D:/Cygwin64/home/HuangKan/TivaWare/driverlib/pin_map.h
 PID.obj: D:/Cygwin64/home/HuangKan/TivaWare/driverlib/timer.h
 PID.obj: D:/Cygwin64/home/HuangKan/TivaWare/driverlib/interrupt.h
 PID.obj: D:/Cygwin64/home/HuangKan/TivaWare/driverlib/rom.h
+PID.obj: D:/Cygwin64/home/HuangKan/TivaWare/driverlib/qei.h
 PID.obj: ../Port.h
 PID.obj: D:/Cygwin64/home/HuangKan/TivaWare/inc/hw_gpio.h
 PID.obj: D:/Cygwin64/home/HuangKan/TivaWare/inc/tm4c123gh6pm.h
 PID.obj: ../Motor.h
-PID.obj: D:/Cygwin64/home/HuangKan/TivaWare/driverlib/qei.h
 PID.obj: ../Seg.h
+PID.obj: ../UART0.h
+PID.obj: D:/Cygwin64/home/HuangKan/TivaWare/utils/uartstdio.h
+PID.obj: D:/Program\ Files\ (x86)/ti/ccsv6/tools/compiler/ti-cgt-arm_5.2.2/include/stdarg.h
 
 ../PID.c: 
 ../PID.h: 
@@ -41,9 +44,12 @@ D:/Cygwin64/home/HuangKan/TivaWare/driverlib/pin_map.h:
 D:/Cygwin64/home/HuangKan/TivaWare/driverlib/timer.h: 
 D:/Cygwin64/home/HuangKan/TivaWare/driverlib/interrupt.h: 
 D:/Cygwin64/home/HuangKan/TivaWare/driverlib/rom.h: 
+D:/Cygwin64/home/HuangKan/TivaWare/driverlib/qei.h: 
 ../Port.h: 
 D:/Cygwin64/home/HuangKan/TivaWare/inc/hw_gpio.h: 
 D:/Cygwin64/home/HuangKan/TivaWare/inc/tm4c123gh6pm.h: 
 ../Motor.h: 
-D:/Cygwin64/home/HuangKan/TivaWare/driverlib/qei.h: 
 ../Seg.h: 
+../UART0.h: 
+D:/Cygwin64/home/HuangKan/TivaWare/utils/uartstdio.h: 
+D:/Program\ Files\ (x86)/ti/ccsv6/tools/compiler/ti-cgt-arm_5.2.2/include/stdarg.h: 

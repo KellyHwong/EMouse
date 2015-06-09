@@ -37,6 +37,7 @@ int main(void)
     //
     EMouse_Init();
     //
+    PID_Move(1,1,2*71/15,2*71/15);
     while (1)
     {
         // Do nothing

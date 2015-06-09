@@ -17,26 +17,31 @@
 #include "driverlib/timer.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/rom.h"
+#include "driverlib/qei.h"
 
 #include "Port.h"
 #include "Motor.h"
 #include "driverlib/qei.h"
 #include "Seg.h"
+#include "UART0.h"
+#include "utils/uartstdio.h"
+
+#include "NEC.h"
 //私有定义
-#define MAX_RPS 50//限制rps输出幅度
-#define MAX_PWM 200//
+#define MAX_RPS 40//限制rps输出幅度
+#define MAX_PWM 450//
 //
 #define BOUNDARY 45.0
 //私有变量及其初始化
 //PID系数
-float g_L_Kp = 1;
-float g_R_Kp = 0.5;
+float g_L_Kp = 0.8;
+float g_R_Kp = 0.4;
 //
-float g_L_Ki = 0;
-float g_R_Ki = 0;
+float g_L_Ki = 0.0;
+float g_R_Ki = 0.0;
 //
-float g_L_Kd = 0;
-float g_R_Kd = 0;
+float g_L_Kd = 0.0;
+float g_R_Kd = 0.0;
 
 //rps与PWM的线性关系
 //float g_L_A = 0.1316;//0.0838;//rps与PWM的线性关系
@@ -52,6 +57,12 @@ float g_R_A = 0.241;
 float g_R_A1 = 0.0282;
 float g_R_B1 = 35.808;
 
+//在地板上的时候的rps与PWM的关系
+float g_L_A0 = 0.0136;
+float g_L_B0 = 1.7433;
+float g_R_A0 = 0.0175;
+float g_R_B0 = 1.2193;
+
 float g_L_RPS = 1.0;
 uint8_t g_L_Dir = 1;
 float g_L_Pre_Err = .0;
@@ -60,6 +71,16 @@ float g_R_RPS = 1.0;
 uint8_t g_R_Dir = 1;
 float g_R_Pre_Err = .0;
 float g_R_Integral = .0;
+
+//当前PWM脉宽
+extern uint16_t g_L_Cur_PWM;
+extern uint16_t g_R_Cur_PWM;
+
+//
+extern uint8_t UART_counter;
+//
+extern uint8_t NEC_LED_G;
+extern uint8_t NEC_Time_Ticks;
 
 void PID_Move(uint8_t l_Dir, uint8_t r_Dir, float l_RPS,  float r_RPS)
 {
@@ -90,16 +111,22 @@ void PID_Start(void)
 float PID_Left_RPS_To_PWM(float rps)
 {
     float PWM;
-    if (rps < BOUNDARY) PWM = rps/g_L_A;
-    else PWM = 1/g_L_A1 * (rps-g_L_B1);
+//    if (rps < BOUNDARY) PWM = rps/g_L_A;
+//    else PWM = 1/g_L_A1 * (rps-g_L_B1);
+    PWM = 1/g_L_A0*(rps-g_L_B0);
+    //防止PWM为负数
+    if (PWM<0) PWM = 1;
     return PWM;
 }
 
 float PID_Right_RPS_To_PWM(float rps)
 {
     float PWM;
-    if (rps < BOUNDARY) PWM = rps/g_R_A;
-    else PWM = 1/g_R_A1 * (rps-g_R_B1);
+//    if (rps < BOUNDARY) PWM = rps/g_R_A;
+//    else PWM = 1/g_R_A1 * (rps-g_R_B1);
+    PWM = 1/g_R_A0*(rps-g_R_B0);
+    //防止PWM为负数
+    if (PWM<0) PWM = 1;
     return PWM;
 }
 
@@ -115,6 +142,7 @@ void PID_Set_Left_RPS(uint8_t dir, float rps)
     if (PWM < 0) PWM = -PWM;
     if (PWM > MAX_PWM) PWM = MAX_PWM;
     width = (uint16_t)PWM;
+    g_L_Cur_PWM = width;
     Motor_Left_PWM_Width(width);
 }
 
@@ -129,6 +157,7 @@ void PID_Set_Right_RPS(uint8_t dir, float rps)
     if (PWM < 0) PWM = -PWM;
     if (PWM > MAX_PWM) PWM = MAX_PWM;
     width = (uint16_t)PWM;
+    g_R_Cur_PWM = width;
     Motor_Right_PWM_Width(width);
 }
 
@@ -139,7 +168,6 @@ void PID_Init(void)
 
 void PID_Init_Timer(void)
 {
-    uint32_t ui32Delta=PID_DELAY_TIME;
     uint32_t ui32SystemClock;
     SysCtlPeripheralEnable(PID_TIMER_PERIPH);
     //设置为周期性定时器
@@ -148,8 +176,7 @@ void PID_Init_Timer(void)
     TimerClockSourceSet(PID_TIMER, TIMER_CLOCK_SYSTEM);
     ui32SystemClock = SysCtlClockGet();
     //50,000-1就是1ms, 50-1就是1us
-    //560us 间隔 读PE0电平
-    TimerLoadSet(PID_TIMER, TIMER_A, ui32SystemClock/1000*ui32Delta - 1);
+    TimerLoadSet(PID_TIMER, TIMER_A, ui32SystemClock/1000*PID_DELAY_TIME - 1);
     IntEnable(INT_TIMER0A);
     TimerIntRegister(PID_TIMER, TIMER_A, PIDTimerIntHandler);
     TimerIntClear(PID_TIMER, TIMER_TIMA_TIMEOUT);
@@ -164,8 +191,22 @@ void PIDTimerIntHandler(void)
     TimerIntClear(PID_TIMER, TIMER_TIMA_TIMEOUT);
     PID_Cali_Left_RPS();
     PID_Cali_Right_RPS();
-    //TODO 数码管输出设置
-    Seg_Display_Num((int)(g_L_Kp*1000)+(int)(g_R_Kp*10));
+    //数码管输出设置，见Seg.c
+    Seg_Update();
+    //NEC的LED超时设置
+    if (NEC_LED_G) NEC_Time_Ticks ++;
+    else NEC_Time_Ticks = 0;
+    //超时关闭LED
+    if (NEC_Time_Ticks >= NEC_TIMEOUT_TICKS)
+        NEC_LED_Off();
+    UART_counter ++;
+    if (UART_UPDATE_TICKS==UART_counter){
+        UART_counter = 0;
+        UARTprintf("Left rps:  %d\n",(uint32_t)(QEIVelocityGet(LEFT_QEI)));
+        UARTprintf("Right rps: %d\n",(uint32_t)(QEIVelocityGet(RIGHT_QEI)));
+        //UARTprintf("Left Position:  %d\n",QEIPositionGet(LEFT_QEI));
+        //UARTprintf("Right Position: %d\n",QEIPositionGet(RIGHT_QEI));
+    }
 }
 
 //PID调节算法
@@ -175,7 +216,7 @@ void PID_Cali_Left_RPS(void)
     float measured_rps;
     float derivative;
     float output;
-    measured_rps = QEIVelocityGet(LEFT_QEI)/512.0;//rps
+    measured_rps = QEIVelocityGet(LEFT_QEI)/LINES/LINE_DIV;//rps
     error = g_L_RPS - measured_rps;
     g_L_Integral = g_L_Integral + error*PID_DELAY_TIME/1000;
     derivative = (error - g_L_Pre_Err)/PID_DELAY_TIME*1000;
@@ -193,7 +234,7 @@ void PID_Cali_Right_RPS(void)
     float measured_rps;
     float derivative;
     float output;
-    measured_rps = QEIVelocityGet(RIGHT_QEI)/512.0;//rps
+    measured_rps = QEIVelocityGet(RIGHT_QEI)/LINES/LINE_DIV;//rps
     error = g_R_RPS - measured_rps;
     g_R_Integral = g_R_Integral + error*PID_DELAY_TIME/1000;
     derivative = (error - g_R_Pre_Err)/PID_DELAY_TIME*1000;

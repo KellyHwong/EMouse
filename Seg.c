@@ -17,6 +17,23 @@
 #include "driverlib/pwm.h"
 #include "driverlib/timer.h"
 #include "driverlib/interrupt.h"
+
+#include "InfSen.h"
+
+//当前PWM脉宽，在Motor.c中定义
+extern uint16_t g_L_Cur_PWM;
+extern uint16_t g_R_Cur_PWM;
+
+//Seg显示器显示当前PWM脉宽
+void Seg_Update(void)
+{
+    //刷新PWM脉宽
+    //Seg_Display_Num((uint32_t)(100*(g_L_Cur_PWM/10)+g_R_Cur_PWM/10.0));
+    //刷新InfSen
+    uint8_t ui8value = InfSen_Read();
+    Seg_Display_Num(ui8value);
+}
+
 //共阳极数码管显示代码
 uint8_t SEG_A_List[16]={0xc0,0xf9,0xa4,0xb0,0x99,0x92,
 						0x82,0xf8,0x80,0x90,0x88,0x83,

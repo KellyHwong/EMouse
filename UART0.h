@@ -11,7 +11,8 @@
 #include <stdint.h>
 
 //公有符号定义
-#define ENDLINE ("\n")
+#define ENDLINE "\n"
+#define UART_UPDATE_TICKS 50//乘以10mS即间隔时间
 
 void UART0_Init(void);
 

@@ -20,6 +20,8 @@
 
 #include "utils/uartstdio.h"
 
+uint8_t UART_counter = 0;
+
 //向串口0发送一字符串
 void UART_Send_String(char str[])
 {

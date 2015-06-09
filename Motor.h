@@ -5,9 +5,12 @@
 
 //公有宏定义
 #define DEBUG_MOTOR_PWM_WIDTH 40//
-#define QEI_UPDATE_TIME PID_DELAY_TIME//Veciloty update time, in mS
+#define QEI_UPDATE_TIME 100//PID_DELAY_TIME//Veciloty update time, in mS
 
 #define LINES 512.0//电机线速度
+#define LINE_DIV 4
+#define BIG_WHEEL 71
+#define SMALL_WHEEL 15
 
 #define QEI_LEFT_MOTOR_FORWARD (-1)//这些好像没什么用
 #define QEI_LEFT_MOTOR_BACKWARD (1)

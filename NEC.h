@@ -12,8 +12,6 @@
 #include <stdbool.h>
 #include "inc/hw_ints.h"
 
-void Seg_Update(void);
-
 //To Adapt，根据接口的端口做相应的修改
 #define INFRA_RED_PORT GPIO_PORTE_BASE
 #define INFRA_RED_PIN GPIO_PIN_0
@@ -25,6 +23,7 @@ void Seg_Update(void);
 
 //其他宏定义
 #define MAX_RAW_BITS 128
+#define NEC_TIMEOUT_TICKS 100//10mS per tick
 
 typedef enum
 {
@@ -100,4 +99,6 @@ NECCommand NECCommandExtract(uint32_t ui32NECEncoded);
 NECCommand NECCommandMenu(NECCommand necCommandMenuStatus, NECCommand necCommand);
 NECCommand NECCommandExecute(NECCommand necCommand);
 
+void NEC_LED_Off(void);
+void NEC_LED_On(void);
 #endif /* NEC_H_ */

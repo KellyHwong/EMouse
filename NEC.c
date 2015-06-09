@@ -13,14 +13,14 @@
 #include "driverlib/qei.h"
 //私有宏定义
 #define KP_INC_DEC 0.1
-#define PWM_INC_DEC 50
+#define PWM_INC_DEC 10
 //Tech Get，需要初始化的变量要在.c源文件中定义
 //NEC命令状态机状态
 NECCommand necCommandMenuStatus = WaitCommand;
 uint32_t freqToSet = 0;
 
 //To Adapt, 需要控制的外部变量
-//当前PWM脉宽
+//当前PWM脉宽，在Motor.c中定义
 extern uint16_t g_L_Cur_PWM;
 extern uint16_t g_R_Cur_PWM;
 //
@@ -46,24 +46,31 @@ extern float g_R_Kp;
 #include "driverlib/rom.h"
 
 #include "Seg.h"
-//Seg显示器显示当前PWM脉宽
-void Seg_Update(void)
-{
-    Seg_Display_Num((uint32_t)(100*(g_L_Cur_PWM/10)+g_R_Cur_PWM/10.0));
-}
 
+uint8_t NEC_LED_G = 0;
+uint8_t NEC_Time_Ticks = 0;
+
+//考虑重复命令
+NECCommand gPreCommand = WaitCommand;
 //TODO 在这里定义按键的功能，注意返回WaitCommand状态
 //NECCommand的类型在头文件中定义
 NECCommand NECCommandExecute(NECCommand necCommand)
 {
+    //保存上一个非Repeat命令
+    if (Repeat!=necCommand) gPreCommand = necCommand;
 	//首次执行命令
 	switch(necCommand){
+	case(Repeat):{
+	    NECCommandExecute(gPreCommand);
+	    return WaitCommand;
+	}
 	case(Pause):{
 	    Motor_Stop();
 	    return WaitCommand;
 	}
     case(Plus):{
-        Motor_Move(g_L_Cur_Dir, g_R_Cur_Dir, g_L_Cur_PWM, g_R_Cur_PWM);
+        //向前走
+        Motor_Move(1, 1, g_L_Cur_PWM, g_R_Cur_PWM);
         return WaitCommand;
     }
     case(Minus):{
@@ -104,6 +111,8 @@ NECCommand NECCommandExecute(NECCommand necCommand)
         return WaitCommand;
     }
     case(Channel):{
+        //小齿轮转一圈是4*LINES
+        //所以这里测出来是小齿轮转速的4倍
         g_L_Sample_RPS = QEIVelocityGet(LEFT_QEI)/LINES;
         g_R_Sample_RPS = QEIVelocityGet(RIGHT_QEI)/LINES;
         return WaitCommand;
@@ -124,6 +133,7 @@ void NEC_Init(void)
 	GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);
 	//熄灭LED灯
 	GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3,0x00);
+	NEC_LED_G = 0;
 	InfraPortInit();
 	NECTimerInit();
 	//刷新Seg显示器
@@ -170,7 +180,7 @@ void InfraPortIntHandler()
 	//下降沿触发中断后
 	GPIOIntClear(INFRA_RED_PORT, GPIO_INT_PIN_0);
 	//点亮三色LED
-	GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3,0xff);
+	NEC_LED_On();
 	NECReceiveReset(false);
 	//除了允许读使能，其他全部复位，只有PE0中断能打开传输使能
 	ui8TransmitEnable = 1;
@@ -210,7 +220,7 @@ void NECTimerIntHandler()
 		if( (TransmitSuccess==machineState) || (RepeatSignal==machineState) \
 		        ||(TransmitError==machineState) ){
 			//关闭三色LED
-			GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3,0x00);
+		    NEC_LED_Off();
 			//传输结束，保留数据
 			NECReceiveReset(true);
 			if(TransmitSuccess==machineState){
@@ -227,9 +237,13 @@ void NECTimerIntHandler()
 						NECCommandMenu(necCommandMenuStatus, necCommand);
 				}
 			}
-			else if(RepeatSignal==machineState)
+			else if(RepeatSignal==machineState){
+			    //命令菜单状态机，不用可以不管
 				necCommandMenuStatus = \
 				        NECCommandMenu(necCommandMenuStatus, Repeat);
+				//考虑Repeat命令
+				necCommandMenuStatus = NECCommandExecute(Repeat);
+			}
 		}
 	}
 
@@ -369,4 +383,16 @@ NECCommand NECCommandMenu(NECCommand necCommandMenuStatus,NECCommand necCommand)
 	case(ChannelPlus):
 	default: return WaitCommand;
 	}
+}
+
+void NEC_LED_Off(void)
+{
+    GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3,0x00);
+    NEC_LED_G = 0;
+}
+
+void NEC_LED_On(void)
+{
+    GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3,0xFF);
+    NEC_LED_G = 1;
 }
