@@ -1,14 +1,11 @@
 # CCS Debug files
-*.map
-*.mk
-*.obj
-*.opt
-*.out
-*.pp
-
-Debug/*.*
-
-
+Debug/*.map
+Debug/*.mk
+Debug/*.obj
+Debug/*.opt
+Debug/*.out
+Debug/*.pp
+Debug/*.xml
 
 # Object files
 *.o
