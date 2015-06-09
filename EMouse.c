@@ -37,7 +37,7 @@ int main(void)
     //
     EMouse_Init();
     //
-    PID_Move(1,1,2*71/15,2*71/15);
+    //PID_Move(1,1,2*71/15,2*71/15);
     while (1)
     {
         // Do nothing
@@ -63,6 +63,7 @@ void EMouse_Init(void)
     UART0_Init();
     //PID计时器初始化
     PID_Init();
+    TimerIntEnable(PID_TIMER, TIMER_TIMA_TIMEOUT);
     //中断优先级设置
     IntPrioritySet(INT_NEC_TIMER, 0x20);//中断优先级为1
     //红外端口中断

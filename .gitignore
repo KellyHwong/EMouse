@@ -6,6 +6,10 @@ Debug/*.opt
 Debug/*.out
 Debug/*.pp
 Debug/*.xml
+Debug/EMouse.map
+Debug/EMouse_linkInfo.xml
+Debug/PID.pp
+Debug/Seg.pp
 
 # Object files
 *.o
@@ -84,4 +88,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 *.map
-Debug/EMouse.map
+

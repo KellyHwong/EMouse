@@ -23,7 +23,7 @@
 
 //其他宏定义
 #define MAX_RAW_BITS 128
-#define NEC_TIMEOUT_TICKS 100//10mS per tick
+#define NEC_TIMEOUT_TICKS 50//10mS per tick
 
 typedef enum
 {
