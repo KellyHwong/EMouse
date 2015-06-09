@@ -6,7 +6,7 @@
 *.out
 *.pp
 
-./Debug/*.*
+Debug/*.*
 
 
 
@@ -86,3 +86,5 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+*.map
+Debug/EMouse.map
