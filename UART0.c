@@ -2,7 +2,7 @@
  *  UART0.c
  *  Created on: 2015年5月1日
  *  Author: HuangKan
- *  Description: TODO
+ *  Description:
  */
 #include "UART0.h"
 
@@ -24,6 +24,8 @@
 uint8_t UART0_Ticks = 0;
 
 extern uint8_t Motor_RPS_Sampled;
+extern float g_L_Sample_RPS;
+extern float g_R_Sample_RPS;
 
 void UART0_Printf(void)
 {
@@ -39,7 +41,7 @@ void UART0_Check_Timeout(void)
         //UART0超时处理
         if (1==Motor_RPS_Sampled)
         {
-
+            UART0_Printf();
         }
     }
 }
