@@ -5,7 +5,7 @@
 
 //公有宏定义
 #define DEBUG_MOTOR_PWM_WIDTH 40//
-#define QEI_UPDATE_TIME 100//PID_DELAY_TIME//Veciloty update time, in mS
+#define QEI_UPDATE_TIME 10//PID_DELAY_TIME//Veciloty update time, in mS
 
 #define LINES 512.0//电机线速度
 #define LINE_DIV 4
@@ -39,6 +39,7 @@
                             }while(0)
 
 // Public function prototypes
+void Motor_Sample_RPS(void);
 void Motor_Init_PWM(void);
 void Motor_Init(void);
 void Motor_Init_QEI(void);
@@ -46,6 +47,8 @@ void Motor_Left_PWM_Width(uint32_t);
 void Motor_Right_PWM_Width(uint32_t);
 void Motor_Move(uint8_t, uint8_t, uint16_t, uint16_t);
 
+//
+void Motor_Check_Timeout(void);
 void Motor_Start(void);
 void Motor_Stop(void);
 void Motor_Break(void);

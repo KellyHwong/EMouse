@@ -188,25 +188,17 @@ void PID_Init_Timer(void)
 
 void PIDTimerIntHandler(void)
 {
+    //写成合作式调度器了，10mS调度一次
     TimerIntClear(PID_TIMER, TIMER_TIMA_TIMEOUT);
-    PID_Cali_Left_RPS();
-    PID_Cali_Right_RPS();
+    //PID反馈控制算法
+//    PID_Cali_Left_RPS();
+//    PID_Cali_Right_RPS();
     //数码管输出设置，见Seg.c
     Seg_Update();
     //NEC的LED超时设置
-    if (NEC_LED_G) NEC_Time_Ticks ++;
-    else NEC_Time_Ticks = 0;
-    //超时关闭LED
-    if (NEC_Time_Ticks >= NEC_TIMEOUT_TICKS)
-        NEC_LED_Off();
-    UART_counter ++;
-    if (UART_UPDATE_TICKS==UART_counter){
-        UART_counter = 0;
-        UARTprintf("Left rps:  %d\n",(uint32_t)(QEIVelocityGet(LEFT_QEI)));
-        UARTprintf("Right rps: %d\n",(uint32_t)(QEIVelocityGet(RIGHT_QEI)));
-        //UARTprintf("Left Position:  %d\n",QEIPositionGet(LEFT_QEI));
-        //UARTprintf("Right Position: %d\n",QEIPositionGet(RIGHT_QEI));
-    }
+    NEC_LED_Check_Timeout();
+    //
+    Motor_Check_Timeout();
 }
 
 //PID调节算法

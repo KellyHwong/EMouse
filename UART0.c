@@ -20,7 +20,37 @@
 
 #include "utils/uartstdio.h"
 
-uint8_t UART_counter = 0;
+#define UART0_TIMEOUT_TICKS 50
+uint8_t UART0_Ticks = 0;
+
+extern uint8_t Motor_RPS_Sampled;
+
+void UART0_Printf(void)
+{
+    UARTprintf("Left 100*rps:  %d\n",(uint32_t)(g_L_Sample_RPS*100));
+    UARTprintf("Right 100*rps: %d\n",(uint32_t)(g_R_Sample_RPS*100));
+}
+
+void UART0_Check_Timeout(void)
+{
+    UART0_Ticks ++;
+    if (UART_UPDATE_TICKS==UART0_Ticks){
+        UART0_Ticks = 0;
+        //UART0超时处理
+        if (1==Motor_RPS_Sampled)
+        {
+
+        }
+    }
+}
+//    UART_counter ++;
+//    if (UART_UPDATE_TICKS==UART_counter){
+//        UART_counter = 0;
+//        UARTprintf("Left rps:  %d\n",(uint32_t)(QEIVelocityGet(LEFT_QEI)));
+//        UARTprintf("Right rps: %d\n",(uint32_t)(QEIVelocityGet(RIGHT_QEI)));
+//        //UARTprintf("Left Position:  %d\n",QEIPositionGet(LEFT_QEI));
+//        //UARTprintf("Right Position: %d\n",QEIPositionGet(RIGHT_QEI));
+//    }
 
 //向串口0发送一字符串
 void UART_Send_String(char str[])

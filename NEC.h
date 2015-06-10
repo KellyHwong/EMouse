@@ -23,7 +23,7 @@
 
 //其他宏定义
 #define MAX_RAW_BITS 128
-#define NEC_TIMEOUT_TICKS 50//10mS per tick
+#define NEC_TIMEOUT_TICKS 12//10mS per tick
 
 typedef enum
 {
@@ -84,6 +84,8 @@ uint8_t ui8EncodedBitCounter;
 
 uint8_t ui8LeadOnesCounter;
 uint8_t ui8CountOnesCounter;
+
+void NEC_LED_Check_Timeout(void);
 
 void NEC_Init(void);
 void InfraPortInit();

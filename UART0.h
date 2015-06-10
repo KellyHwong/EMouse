@@ -15,7 +15,8 @@
 #define UART_UPDATE_TICKS 50//乘以10mS即间隔时间
 
 void UART0_Init(void);
-
+void UART0_Printf(void);
+void UART0_Check_Timeout(void);
 void UART_Send_String(char str[]);
 void UART0_Interrupt();
 void UART_Int_To_String(uint32_t num, char* pString, \

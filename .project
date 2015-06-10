@@ -36,6 +36,11 @@
 			<locationURI>TivaWare/driverlib/interrupt.c</locationURI>
 		</link>
 		<link>
+			<name>timer.c</name>
+			<type>1</type>
+			<locationURI>TivaWare/driverlib/timer.c</locationURI>
+		</link>
+		<link>
 			<name>uartstdio.c</name>
 			<type>1</type>
 			<locationURI>TivaWare/utils/uartstdio.c</locationURI>

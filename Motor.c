@@ -21,7 +21,46 @@ uint8_t g_R_Cur_Dir = 1;
 float g_L_Sample_RPS = 0;//采样到的转速，初始化为0
 float g_R_Sample_RPS = 0;
 
+uint8_t Motor_G = 0;
+uint8_t Motor_Ticks = 0;
+uint8_t Motor_Timeout_Count = 0;
+uint8_t Motor_RPS_Sampled = 0;
+
 #define BREAK_TIME 10//单位mS
+#define MOTOR_TIMEOUT_TICKS 50//10mS each tick
+
+void Motor_Check_Timeout(void)
+{
+    if (Motor_G) Motor_Ticks ++;
+    else Motor_Ticks = 0;
+    //超时关闭LED
+    if (Motor_Ticks >= MOTOR_TIMEOUT_TICKS) {
+        Motor_Ticks = 0;
+        //超时处理
+        Motor_Timeout_Count ++;
+        //第一次超时
+        if (1==Motor_Timeout_Count) {
+            //采样速度
+            Motor_Sample_RPS();
+        }
+        //第二次超时
+        if (2==Motor_Timeout_Count) {
+            Motor_Timeout_Count = 0;
+            //停止电机
+            Motor_Stop();
+        }
+        NEC_LED_Off();
+    }
+}
+
+void Motor_Sample_RPS(void)
+{
+    Motor_RPS_Sampled = 1;
+    g_L_Sample_RPS = QEIVelocityGet(LEFT_QEI)/LINES/LINE_DIV* \
+        1000.0/QEI_UPDATE_TIME*SMALL_WHEEL/BIG_WHEEL;
+    g_R_Sample_RPS = QEIVelocityGet(RIGHT_QEI)/LINES/LINE_DIV* \
+        1000.0/QEI_UPDATE_TIME*SMALL_WHEEL/BIG_WHEEL;
+}
 
 void Motor_Init_PWM(void)
 {
@@ -133,6 +172,7 @@ void Motor_Right_PWM_Width(uint32_t width)
 //注意，不能改变电机方向！
 void Motor_Start(void)
 {
+    Motor_G = 1;
     Motor_Left_PWM_Width(g_L_Cur_PWM);
     Motor_Right_PWM_Width(g_R_Cur_PWM);
 }
@@ -142,6 +182,7 @@ void Motor_Stop(void)
 {
     Motor_Left_PWM_Width(1);
     Motor_Right_PWM_Width(1);
+    Motor_G = 0;
 }
 
 //刹车，即反向转动一定的时间
@@ -153,6 +194,13 @@ void Motor_Break(void)
     //不改变当前方向
     g_L_Cur_Dir = 1 - g_L_Cur_Dir;
     g_R_Cur_Dir = 1 - g_R_Cur_Dir;
+    Motor_G = 0;
+}
+
+//电机反向
+void Motor_Invert(void)
+{
+    Motor_Move((1-g_L_Cur_Dir), (1-g_R_Cur_Dir), g_L_Cur_PWM, g_R_Cur_PWM);
 }
 
 //改变当前PWM脉宽，启动电机
@@ -160,6 +208,7 @@ void Motor_Break(void)
 void Motor_Move(uint8_t leftCtl, uint8_t rightCtl, \
     uint16_t leftWidth, uint16_t rightWidth)
 {
+    Motor_G = 1;
     g_L_Cur_PWM = leftWidth;
     g_R_Cur_PWM = rightWidth;
     g_L_Cur_Dir = leftCtl;

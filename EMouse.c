@@ -12,6 +12,7 @@
 #include "driverlib/interrupt.h"
 #include "utils/uartstdio.h"
 #include "inc/tm4c123gh6pm.h"
+#include "driverlib/timer.h"
 
 #include "EMouse.h"
 #include "Motor.h"

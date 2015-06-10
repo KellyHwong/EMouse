@@ -11,6 +11,7 @@
 #include "PID.h"
 #include "utils/uartstdio.h"
 #include "driverlib/qei.h"
+#include "UART0.h"
 //私有宏定义
 #define KP_INC_DEC 0.1
 #define PWM_INC_DEC 10
@@ -45,8 +46,6 @@ extern float g_R_Kp;
 #include "driverlib/interrupt.h"
 #include "driverlib/rom.h"
 
-#include "Seg.h"
-
 uint8_t NEC_LED_G = 0;
 uint8_t NEC_Time_Ticks = 0;
 
@@ -69,13 +68,13 @@ NECCommand NECCommandExecute(NECCommand necCommand)
 	    return WaitCommand;
 	}
     case(Plus):{
-        //向前走
-        Motor_Move(1, 1, g_L_Cur_PWM, g_R_Cur_PWM);
+        //开启电机
+        Motor_Start();
         return WaitCommand;
     }
     case(Minus):{
         //反向移动，不只是倒退的意思
-        Motor_Move((1-g_L_Cur_Dir), (1-g_R_Cur_Dir), g_L_Cur_PWM, g_R_Cur_PWM);
+        Motor_Invert();
         return WaitCommand;
     }
     case(Num0):{
@@ -113,17 +112,27 @@ NECCommand NECCommandExecute(NECCommand necCommand)
     case(Channel):{
         //小齿轮转一圈是4*LINES
         //所以这里测出来是小齿轮转速的4倍
-        g_L_Sample_RPS = QEIVelocityGet(LEFT_QEI)/LINES;
-        g_R_Sample_RPS = QEIVelocityGet(RIGHT_QEI)/LINES;
+        Motor_Sample_RPS();
         return WaitCommand;
     }
     case(ChannelPlus):{
-        UARTprintf("Left 512*rps:  %d\n",(uint32_t)(g_L_Sample_RPS*LINES));
-        UARTprintf("Right 512*rps: %d\n",(uint32_t)(g_R_Sample_RPS*LINES));
+        UART0_Printf();
         return WaitCommand;
     }
     default: return WaitCommand;
 	}
+}
+
+//检查超时
+void NEC_LED_Check_Timeout(void)
+{
+    if (NEC_LED_G) NEC_Time_Ticks ++;
+    else NEC_Time_Ticks = 0;
+    //超时关闭LED
+    if (NEC_Time_Ticks >= NEC_TIMEOUT_TICKS){
+        NEC_Time_Ticks = 0;
+        NEC_LED_Off();
+    }
 }
 
 void NEC_Init(void)

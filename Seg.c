@@ -28,10 +28,10 @@ extern uint16_t g_R_Cur_PWM;
 void Seg_Update(void)
 {
     //刷新PWM脉宽
-    //Seg_Display_Num((uint32_t)(100*(g_L_Cur_PWM/10)+g_R_Cur_PWM/10.0));
+    Seg_Display_Num((uint32_t)(100*(g_L_Cur_PWM/10)+g_R_Cur_PWM/10.0));
     //刷新InfSen
     uint8_t ui8value = InfSen_Read();
-    Seg_Display_Num(ui8value);
+    //Seg_Display_Num(ui8value);
 }
 
 //共阳极数码管显示代码
