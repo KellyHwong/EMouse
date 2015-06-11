@@ -22,6 +22,7 @@
 #include "UART0.h"
 #include "PID.h"
 #include "Port.h"
+#include "Sch.h"
 
 //PID的外部变量
 extern float g_L_RPS;
@@ -64,7 +65,8 @@ void EMouse_Init(void)
     UART0_Init();
     //PID计时器初始化
     PID_Init();
-    TimerIntEnable(PID_TIMER, TIMER_TIMA_TIMEOUT);
+    //调度器初始化
+    Sch_Init();
     //中断优先级设置
     IntPrioritySet(INT_NEC_TIMER, 0x20);//中断优先级为1
     //红外端口中断

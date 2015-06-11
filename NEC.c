@@ -59,56 +59,54 @@ NECCommand NECCommandExecute(NECCommand necCommand)
     if (Repeat!=necCommand) gPreCommand = necCommand;
     //首次执行命令
     switch(necCommand){
+    //执行上一个命令
     case(Repeat):{
         NECCommandExecute(gPreCommand);
         return WaitCommand;
     }
     case(Pause):{
-        Motor_Stop();
+//        Motor_Pause();
         return WaitCommand;
     }
     case(Plus):{
+        PID_Move(1,1,3.5,3.5);
+        PID_Start();
         //开启电机
-        g_L_Cur_Dir = 1;
-        g_R_Cur_Dir = 1;
-        Motor_Start();
+//        Motor_SetDir(1,1);
+//        Motor_Start(g_L_Cur_PWM, g_R_Cur_PWM);
         return WaitCommand;
     }
     case(Minus):{
         //反向移动，不只是倒退的意思
-        Motor_Invert();
+//        Motor_Invert();
+        PID_Stop();
+        Motor_SetPWM_And_Move(1,1);
         return WaitCommand;
     }
     case(Num0):{
-        g_L_Cur_PWM += PWM_INC_DEC;
-        g_R_Cur_PWM += PWM_INC_DEC;
-        Seg_Update();
+//        g_L_Cur_PWM += PWM_INC_DEC;
+//        g_R_Cur_PWM += PWM_INC_DEC;
         return WaitCommand;
     }
     case(Num100Plus):{
-        g_L_Cur_PWM += PWM_INC_DEC;
-        Seg_Update();
+//        g_L_Cur_PWM += PWM_INC_DEC;
         return WaitCommand;
     }
     case(Num200Plus):{
-        g_R_Cur_PWM += PWM_INC_DEC;
-        Seg_Update();
+//        g_R_Cur_PWM += PWM_INC_DEC;
         return WaitCommand;
     }
     case(Num1):{
-        g_L_Cur_PWM -= PWM_INC_DEC;
-        g_R_Cur_PWM -= PWM_INC_DEC;
-        Seg_Update();
+//        g_L_Cur_PWM -= PWM_INC_DEC;
+//        g_R_Cur_PWM -= PWM_INC_DEC;
         return WaitCommand;
     }
     case(Num2):{
-        g_L_Cur_PWM -= PWM_INC_DEC;
-        Seg_Update();
+//        g_L_Cur_PWM -= PWM_INC_DEC;
         return WaitCommand;
     }
     case(Num3):{
-        g_R_Cur_PWM -= PWM_INC_DEC;
-        Seg_Update();
+//        g_R_Cur_PWM -= PWM_INC_DEC;
         return WaitCommand;
     }
     case(Channel):{

@@ -26,5 +26,6 @@ void PID_Set_Right_RPS(uint8_t dir, float rps);
 void PID_Move(uint8_t l_Dir, uint8_t r_Dir, float l_RPS,  float r_RPS);
 void PID_Cali_Left_RPS(void);
 void PID_Cali_Right_RPS(void);
+void PID_Check_Timeout(void);
 
 #endif /* PID_H_ */

@@ -19,6 +19,7 @@
 #include "inc/hw_ints.h"
 
 #include "utils/uartstdio.h"
+#include "Motor.h"
 
 #define UART0_TIMEOUT_TICKS 50
 uint8_t UART0_Ticks = 0;
@@ -45,14 +46,6 @@ void UART0_Check_Timeout(void)
         }
     }
 }
-//    UART_counter ++;
-//    if (UART_UPDATE_TICKS==UART_counter){
-//        UART_counter = 0;
-//        UARTprintf("Left rps:  %d\n",(uint32_t)(QEIVelocityGet(LEFT_QEI)));
-//        UARTprintf("Right rps: %d\n",(uint32_t)(QEIVelocityGet(RIGHT_QEI)));
-//        //UARTprintf("Left Position:  %d\n",QEIPositionGet(LEFT_QEI));
-//        //UARTprintf("Right Position: %d\n",QEIPositionGet(RIGHT_QEI));
-//    }
 
 //向串口0发送一字符串
 void UART_Send_String(char str[])

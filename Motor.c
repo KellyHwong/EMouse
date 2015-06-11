@@ -29,7 +29,7 @@ uint8_t Motor_Ticks = 0;
 uint8_t Motor_Timeout_Count = 0;
 uint8_t Motor_RPS_Sampled = 0;
 
-#define BREAK_TIME 10//单位mS
+#define BREAK_TIME 5//单位mS
 #define MOTOR_TIMEOUT_TICKS 50//10mS each tick
 #define ACCEL_TIMEOUT_TICKS 50//
 
@@ -37,6 +37,7 @@ uint8_t Motor_RPS_Sampled = 0;
 void Motor_Check_Timeout(void)
 {
     float l_PWM_Div, r_PWM_Div;
+    uint16_t tmpL, tmpR;
     //电机被打开
     if (Motor_G) {
         Motor_Ticks ++;
@@ -49,10 +50,15 @@ void Motor_Check_Timeout(void)
     }
     //匀加速
     if (Motor_G && (Motor_Accel_Ticks<=ACCEL_TIMEOUT_TICKS)) {
-        l_PWM_Div = 1.0*g_L_Cur_PWM*ACCEL_TIMEOUT_TICKS/Motor_Accel_Ticks;
-        r_PWM_Div = 1.0*g_R_Cur_PWM*ACCEL_TIMEOUT_TICKS/Motor_Accel_Ticks;
-        Motor_Move(g_L_Cur_Dir,g_R_Cur_Dir,\
+        //不匀加速
+        l_PWM_Div = g_L_Cur_PWM;//1.0*g_L_Cur_PWM*Motor_Accel_Ticks/ACCEL_TIMEOUT_TICKS;
+        r_PWM_Div = g_R_Cur_PWM;//1.0*g_R_Cur_PWM*Motor_Accel_Ticks/ACCEL_TIMEOUT_TICKS;
+        //不改变全局变量g_L_Cur_PWM和g_R_Cur_PWM
+        tmpL = g_L_Cur_PWM; tmpR = g_R_Cur_PWM;
+        Motor_Move(g_L_Cur_Dir, g_R_Cur_Dir, \
                 (uint16_t)l_PWM_Div,(uint16_t)r_PWM_Div);
+        g_L_Cur_PWM = tmpL;
+        g_R_Cur_PWM = tmpR;
     }
     //运动和采样速度
     if (Motor_Ticks >= MOTOR_TIMEOUT_TICKS) {
@@ -60,24 +66,24 @@ void Motor_Check_Timeout(void)
         //超时处理
         Motor_Timeout_Count ++;
         //2s时采样速度（每一次持续MOTOR_TIMEOUT_TICKS*10mS）
-        if (4==Motor_Timeout_Count) {
+        if (2==Motor_Timeout_Count) {
             Motor_Sample_RPS();
         }
         //2.5s时停止电机
-        if (5==Motor_Timeout_Count) {
+        if (2==Motor_Timeout_Count) {
             Motor_Timeout_Count = 0;
             //停止电机
-            Motor_Stop();
+            Motor_Break();
         }
-        NEC_LED_Off();
     }
 }
 
 //不改变当前PWM脉宽，以先前的脉宽启动电机
 //注意，不能改变电机方向！
 //在这里写匀加速
-inline void Motor_Start(void)
+inline void Motor_Start(uint16_t leftWidth, uint16_t rightWidth)
 {
+    Motor_SetPWM_Not_Move(leftWidth, rightWidth);
     Motor_G = 1;
     //向前行驶
     //Motor_Move(g_L_Cur_Dir,g_R_Cur_Dir,g_L_Cur_PWM,g_R_Cur_PWM);
@@ -92,30 +98,74 @@ inline void Motor_Sample_RPS(void)
         1000.0/QEI_UPDATE_TIME*SMALL_WHEEL/BIG_WHEEL;
 }
 
-//停止电机，不改变当前PWM脉宽
-void Motor_Stop(void)
+//暂停电机，不改变当前PWM脉宽
+void Motor_Pause(void)
 {
     Motor_Left_PWM_Width(1);
     Motor_Right_PWM_Width(1);
     Motor_G = 0;
 }
 
+//
+void Motor_SetPWM_Not_Move(uint16_t leftWidth, uint16_t rightWidth)
+{
+    if (leftWidth >= MAX_PWM) leftWidth = MAX_PWM;
+    if (rightWidth >= MAX_PWM) rightWidth = MAX_PWM;
+    g_L_Cur_PWM = leftWidth;
+    g_R_Cur_PWM = rightWidth;
+}
+//
+void Motor_SetPWM_And_Move(uint16_t leftWidth, uint16_t rightWidth)
+{
+    if (leftWidth >= MAX_PWM) leftWidth = MAX_PWM;
+    if (rightWidth >= MAX_PWM) rightWidth = MAX_PWM;
+    g_L_Cur_PWM = leftWidth;
+    g_R_Cur_PWM = rightWidth;
+    Motor_Left_PWM_Width(leftWidth);
+    Motor_Right_PWM_Width(rightWidth);
+}
+
+//
+void Motor_SetDir(uint8_t leftCtl, uint8_t rightCtl)
+{
+    if (1==leftCtl)
+    {
+        g_L_Cur_Dir = 1;
+        LeftMotor_Forward;
+    }
+    else if (0==leftCtl)
+    {
+        g_L_Cur_Dir = 0;
+        LeftMotor_Backward;
+    }
+
+    if (1==rightCtl)
+    {
+        g_R_Cur_Dir = 1;
+        RightMotor_Forward;
+    }
+    else if (0==rightCtl)
+    {
+        g_R_Cur_Dir = 0;
+        RightMotor_Backward;
+    }
+}
+
 //刹车，即反向转动一定的时间
 void Motor_Break(void)
 {
-    Motor_Move((1-g_L_Cur_Dir), (1-g_R_Cur_Dir), g_L_Cur_PWM, g_R_Cur_PWM);
+    Motor_Move((1-g_L_Cur_Dir), (1-g_R_Cur_Dir), MAX_PWM, MAX_PWM);
     SysCtlDelay(SysCtlClockGet()/3000*BREAK_TIME);
-    Motor_Stop();
-    //不改变当前方向
-    g_L_Cur_Dir = 1 - g_L_Cur_Dir;
-    g_R_Cur_Dir = 1 - g_R_Cur_Dir;
+    //再次反向，即不改变方向
+    Motor_Move((1-g_L_Cur_Dir), (1-g_R_Cur_Dir), 1,1);
     Motor_G = 0;
 }
 
 //电机反向
 void Motor_Invert(void)
 {
-    Motor_Move((1-g_L_Cur_Dir), (1-g_R_Cur_Dir), g_L_Cur_PWM, g_R_Cur_PWM);
+    Motor_SetDir((1-g_L_Cur_Dir), (1-g_R_Cur_Dir));
+    Motor_SetPWM_And_Move(g_L_Cur_PWM, g_R_Cur_PWM);
 }
 
 //改变当前PWM脉宽，启动电机
