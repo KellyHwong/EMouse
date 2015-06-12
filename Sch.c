@@ -43,7 +43,7 @@ void Sch_Timer_ISR(void)
     //NEC的LED超时设置
     NEC_LED_Check_Timeout();
     //
-//    Motor_Check_Timeout();
+    Motor_Check_Timeout();
     //更新速度
     Motor_Sample_RPS();
     //

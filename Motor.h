@@ -6,7 +6,7 @@
 //公有宏定义
 #define DEBUG_MOTOR_PWM_WIDTH 40//
 //Veciloty update time, in mS
-#define QEI_UPDATE_TIME 20//不知道设置为多少合适
+#define QEI_UPDATE_TIME 10//不知道设置为多少合适
 
 #define LINES 512.0//电机线速度
 #define LINE_DIV 4
@@ -63,5 +63,6 @@ void Motor_Invert(void);
 void Motor_SetDir(uint8_t leftCtl, uint8_t rightCtl);
 void Motor_SetPWM_Not_Move(uint16_t leftWidth, uint16_t rightWidth);
 void Motor_SetPWM_And_Move(uint16_t leftWidth, uint16_t rightWidth);
+void Motor_Print_Data(void);
 
 #endif

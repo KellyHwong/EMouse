@@ -23,15 +23,18 @@
 //当前PWM脉宽，在Motor.c中定义
 extern uint16_t g_L_Cur_PWM;
 extern uint16_t g_R_Cur_PWM;
-
+//设定的RPS，在PID.c中定义
+extern float g_L_RPS;
+extern float g_R_RPS;
 //Seg显示器显示当前PWM脉宽
 void Seg_Update(void)
 {
     //刷新PWM脉宽
-    Seg_Display_Num((uint32_t)(100*(g_L_Cur_PWM/10)+g_R_Cur_PWM/10.0));
+    //Seg_Display_Num((uint32_t)(100*(g_L_Cur_PWM/10)+g_R_Cur_PWM/10.0));
     //刷新InfSen
-    uint8_t ui8value = InfSen_Read();
+    //uint8_t ui8value = InfSen_Read();
     //Seg_Display_Num(ui8value);
+    Seg_Display_Num((uint32_t)(g_L_RPS*1000)/100*100 + (uint32_t)(g_R_RPS*10));
 }
 
 //共阳极数码管显示代码
