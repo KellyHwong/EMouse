@@ -3,6 +3,7 @@
  *  Created on: 2015年5月4日
  *  Author: HuangKan
  *  Description: 红外NEC协议解码
+ *  在这个文件中编写对命令的响应，实现快速的调试
  */
 #include "NEC.h"
 #include "Port.h"
@@ -14,7 +15,10 @@
 #include "UART0.h"
 //私有宏定义
 #define KP_INC_DEC 0.1
+#define KI_INC_DEC 1
+#define KD_INC_DEC 0.01
 #define PWM_INC_DEC 10
+#define DEBUG_RPS 5
 //Tech Get，需要初始化的变量要在.c源文件中定义
 //NEC命令状态机状态
 NECCommand necCommandMenuStatus = WaitCommand;
@@ -31,8 +35,8 @@ extern uint8_t g_R_Cur_Dir;
 extern float g_L_Sample_RPS;  //采样到的转速
 extern float g_R_Sample_RPS;
 //PID算法Kp值
-extern float g_L_Kp;
-extern float g_R_Kp;
+extern float g_L_Kd;
+extern float g_R_Kd;
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -48,6 +52,19 @@ extern float g_R_Kp;
 
 uint8_t NEC_LED_G = 0;
 uint8_t NEC_Time_Ticks = 0;
+
+void NEC_Init(void) {
+  //LED灯初始化
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+  GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3);
+  //熄灭LED灯
+  GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3, 0x00);
+  NEC_LED_G = 0;
+  InfraPortInit();
+  NECTimerInit();
+  //刷新Seg显示器
+  Seg_Update();
+}
 
 //考虑重复命令
 NECCommand gPreCommand = WaitCommand;
@@ -66,47 +83,56 @@ NECCommand NECCommandExecute(NECCommand necCommand) {
     }
     case (Pause): {
 //        Motor_Pause();
+      PID_Stop();
       return WaitCommand;
     }
     case (Plus): {
-      PID_Move(1, 1, 3.5, 3.5);
-      PID_Start();
+//      Motor_SetDir(1, 1);
+//      Motor_SetPWM_And_Move(g_L_Cur_PWM, g_R_Cur_PWM);
       //开启电机
-//        Motor_SetDir(1,1);
-//        Motor_Start(g_L_Cur_PWM, g_R_Cur_PWM);
+      PID_Move(1, 1, DEBUG_RPS, DEBUG_RPS);
       return WaitCommand;
     }
     case (Minus): {
       //反向移动，不只是倒退的意思
 //        Motor_Invert();
-      PID_Stop();
-      Motor_SetPWM_And_Move(1, 1);
+//      Motor_SetDir(0, 0);
+//      Motor_SetPWM_And_Move(g_L_Cur_PWM, g_R_Cur_PWM);
+      PID_Move(0, 0, DEBUG_RPS, DEBUG_RPS);
       return WaitCommand;
     }
     case (Num0): {
-//        g_L_Cur_PWM += PWM_INC_DEC;
-//        g_R_Cur_PWM += PWM_INC_DEC;
+//      g_L_Cur_PWM += PWM_INC_DEC;
+//      g_R_Cur_PWM += PWM_INC_DEC;
+      g_L_Kd +=KD_INC_DEC;
+      g_R_Kd +=KD_INC_DEC;
       return WaitCommand;
     }
     case (Num100Plus): {
-//        g_L_Cur_PWM += PWM_INC_DEC;
+//      g_L_Cur_PWM += PWM_INC_DEC;
+      g_L_Kd +=KD_INC_DEC;
       return WaitCommand;
     }
     case (Num200Plus): {
-//        g_R_Cur_PWM += PWM_INC_DEC;
+//      g_R_Cur_PWM += PWM_INC_DEC;
+      g_R_Kd +=KD_INC_DEC;
       return WaitCommand;
     }
     case (Num1): {
-//        g_L_Cur_PWM -= PWM_INC_DEC;
-//        g_R_Cur_PWM -= PWM_INC_DEC;
+//      g_L_Cur_PWM -= PWM_INC_DEC;
+//      g_R_Cur_PWM -= PWM_INC_DEC;
+      g_L_Kd -=KD_INC_DEC;
+      g_R_Kd -=KD_INC_DEC;
       return WaitCommand;
     }
     case (Num2): {
-//        g_L_Cur_PWM -= PWM_INC_DEC;
+//      g_L_Cur_PWM -= PWM_INC_DEC;
+      g_L_Kd -=KD_INC_DEC;
       return WaitCommand;
     }
     case (Num3): {
-//        g_R_Cur_PWM -= PWM_INC_DEC;
+//      g_R_Cur_PWM -= PWM_INC_DEC;
+      g_R_Kd -=KD_INC_DEC;
       return WaitCommand;
     }
     case (Channel): {
@@ -133,19 +159,6 @@ void NEC_LED_Check_Timeout(void) {
     NEC_Time_Ticks = 0;
     NEC_LED_Off();
   }
-}
-
-void NEC_Init(void) {
-  //LED灯初始化
-  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
-  GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3);
-  //熄灭LED灯
-  GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3, 0x00);
-  NEC_LED_G = 0;
-  InfraPortInit();
-  NECTimerInit();
-  //刷新Seg显示器
-  Seg_Update();
 }
 
 void InfraPortInit() {

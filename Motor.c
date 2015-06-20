@@ -41,7 +41,7 @@ int dataPtr = 0;
 extern float g_L_RPS;
 extern float g_R_RPS;
 
-#define RATE 1.1
+#define RATE 1.00
 //注册到了Sch的定时器中(见Sch.c)，电机超时处理，在运动到一半时采样速度
 void Motor_Check_Timeout(void) {
   float l_PWM_Div, r_PWM_Div;
@@ -56,7 +56,7 @@ void Motor_Check_Timeout(void) {
     Motor_Ticks = 0;
     Motor_Accel_Ticks = 0;
   }
-  //匀加速
+
   if (Motor_G && (Motor_Accel_Ticks <= ACCEL_TIMEOUT_TICKS)) {
     //不匀加速
     l_PWM_Div = g_L_Cur_PWM;  //1.0*g_L_Cur_PWM*Motor_Accel_Ticks/ACCEL_TIMEOUT_TICKS;
@@ -82,6 +82,10 @@ void Motor_Check_Timeout(void) {
         dataPtr++;
       }
     }
+  }
+  if (DATA_NUM == dataPtr) {
+    //PID_Stop();
+    //Motor_SetPWM_And_Move(1, 1);
   }
   //运动和采样速度
 //  if (Motor_Ticks >= MOTOR_TIMEOUT_TICKS) {
@@ -147,7 +151,7 @@ void Motor_Pause(void) {
   Motor_G = 0;
 }
 
-//
+// 有限幅
 void Motor_SetPWM_Not_Move(uint16_t leftWidth, uint16_t rightWidth) {
   if (leftWidth >= MAX_PWM)
     leftWidth = MAX_PWM;
@@ -158,10 +162,9 @@ void Motor_SetPWM_Not_Move(uint16_t leftWidth, uint16_t rightWidth) {
 }
 //
 void Motor_SetPWM_And_Move(uint16_t leftWidth, uint16_t rightWidth) {
-  if (leftWidth >= MAX_PWM)
-    leftWidth = MAX_PWM;
-  if (rightWidth >= MAX_PWM)
-    rightWidth = MAX_PWM;
+  leftWidth = Motor_PWM_Width_Protect(leftWidth);
+  rightWidth = Motor_PWM_Width_Protect(rightWidth);
+  Motor_G = 1;
   g_L_Cur_PWM = leftWidth;
   g_R_Cur_PWM = rightWidth;
   Motor_Left_PWM_Width(leftWidth);
@@ -333,12 +336,24 @@ void Motor_Init(void) {
 }
 
 //width的范围是0到499
-void Motor_Left_PWM_Width(uint32_t width) {
+void Motor_Left_PWM_Width(uint16_t width) {
+  width = Motor_PWM_Width_Protect(width);
+  g_L_Cur_PWM = width;
   PWMPulseWidthSet(PWM0_BASE, PWM_OUT_2, width);
   PWMPulseWidthSet(PWM0_BASE, PWM_OUT_3, width);
 }
 
-void Motor_Right_PWM_Width(uint32_t width) {
+void Motor_Right_PWM_Width(uint16_t width) {
+  width = Motor_PWM_Width_Protect(width);
+  g_R_Cur_PWM = width;
   PWMPulseWidthSet(PWM0_BASE, PWM_OUT_6, width);
   PWMPulseWidthSet(PWM1_BASE, PWM_OUT_3, width);
+}
+
+uint16_t Motor_PWM_Width_Protect(uint16_t width) {
+  if (width < MIN_PWM)
+    width = MIN_PWM;
+  else if (width > MAX_PWM)
+    width = MAX_PWM;
+  return width;
 }

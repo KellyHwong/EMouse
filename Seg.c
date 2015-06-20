@@ -26,53 +26,56 @@ extern uint16_t g_R_Cur_PWM;
 //设定的RPS，在PID.c中定义
 extern float g_L_RPS;
 extern float g_R_RPS;
-//Seg显示器显示当前PWM脉宽
-void Seg_Update(void)
-{
-    //刷新PWM脉宽
-    //Seg_Display_Num((uint32_t)(100*(g_L_Cur_PWM/10)+g_R_Cur_PWM/10.0));
-    //刷新InfSen
-    //uint8_t ui8value = InfSen_Read();
-    //Seg_Display_Num(ui8value);
-    Seg_Display_Num((uint32_t)(g_L_RPS*1000)/100*100 + (uint32_t)(g_R_RPS*10));
+//PID算法Kp值
+extern float g_L_Kd;
+extern float g_R_Kd;
+void Seg_Update(void) {
+//  Seg_Display_Num(
+//      ((uint32_t) (10 * g_L_Kp)) * 100 + ((uint32_t) (10 * g_R_Kp)));
+//  Seg_Display_Num(
+//      ((uint32_t) (100 * g_L_Kd)) * 100 + ((uint32_t) (100 * g_R_Kd)));
+  //刷新PWM脉宽
+//    Seg_Display_Num((uint32_t)(100*(g_L_Cur_PWM/10)+g_R_Cur_PWM/10.0));
+  //刷新InfSen
+  uint8_t ui8value = InfSen_Read();
+  Seg_Display_Num(ui8value);
+  //Seg_Display_Num((uint32_t)(g_L_RPS*1000)/100*100 + (uint32_t)(g_R_RPS*10));
 }
 
 //共阳极数码管显示代码
-uint8_t SEG_A_List[16]={0xc0,0xf9,0xa4,0xb0,0x99,0x92,
-						0x82,0xf8,0x80,0x90,0x88,0x83,
-						0xc6,0xa1,0x86,0x8e};
+uint8_t SEG_A_List[16] = { 0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 0x80,
+    0x90, 0x88, 0x83, 0xc6, 0xa1, 0x86, 0x8e };
 
- void Seg_Display_Num(uint32_t dat)
- {
-	uint8_t i,j;
-	uint32_t temp = 1;
+void Seg_Display_Num(uint32_t dat) {
+  uint8_t i, j;
+  uint32_t temp = 1;
 
-	//使能端口D
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
-	//设置PD0、PD1、PD3为输出
-    GPIOPinTypeGPIOOutput(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_3);
+  //使能端口D
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
+  //设置PD0、PD1、PD3为输出
+  GPIOPinTypeGPIOOutput(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_3);
 
-	//显示4位十进制数
-	for (i=0;i<4;i++)
-	{
-		//从低位到高位每次剥离出一位数字
-		temp = 1;
-		for (j=0;j<i;j++)
-			temp *= 10;
-		temp = (dat/temp)%10;
+  //显示4位十进制数
+  for (i = 0; i < 4; i++) {
+    //从低位到高位每次剥离出一位数字
+    temp = 1;
+    for (j = 0; j < i; j++)
+      temp *= 10;
+    temp = (dat / temp) % 10;
 
-		//串行发送8为待显示数据
-		for(j=0;j<8;j++)
-		{
-			//高位先发送
-			if((SEG_A_List[temp]<<j)&0x80)
-				GPIOPinWrite(GPIO_PORTD_BASE,GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_3 , 0x08);
-			else
-				GPIOPinWrite(GPIO_PORTD_BASE,GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_3 , 0x00);
-			//移位时钟引脚给一上升沿，进行移动一位数据
-			GPIOPinWrite(GPIO_PORTD_BASE,GPIO_PIN_0 | GPIO_PIN_1, 0x01);
-		}
-	}
-	//存储时钟引脚给一上升沿，进行并行驱动数码管
-	GPIOPinWrite(GPIO_PORTD_BASE,GPIO_PIN_0 | GPIO_PIN_1, 0x03);
+    //串行发送8为待显示数据
+    for (j = 0; j < 8; j++) {
+      //高位先发送
+      if ((SEG_A_List[temp] << j) & 0x80)
+        GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_3,
+                     0x08);
+      else
+        GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_3,
+                     0x00);
+      //移位时钟引脚给一上升沿，进行移动一位数据
+      GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1, 0x01);
+    }
+  }
+  //存储时钟引脚给一上升沿，进行并行驱动数码管
+  GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1, 0x03);
 }

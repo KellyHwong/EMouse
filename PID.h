@@ -17,7 +17,6 @@
 void PID_Init(void);
 void PID_Init_Timer(void);
 void PIDTimerIntHandler(void);
-void PID_Start(void);
 void PID_Stop(void);
 float PID_Left_RPS_To_PWM(float rps);
 float PID_Right_RPS_To_PWM(float rps);
@@ -27,5 +26,8 @@ void PID_Move(uint8_t l_Dir, uint8_t r_Dir, float l_RPS,  float r_RPS);
 void PID_Cali_Left_RPS(void);
 void PID_Cali_Right_RPS(void);
 void PID_Check_Timeout(void);
+void PID_Protect(void);
+float PID_Protect_RPS(float rps);
+void PID_Param_Clear(void);
 
 #endif /* PID_H_ */

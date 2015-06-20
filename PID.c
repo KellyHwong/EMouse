@@ -28,38 +28,38 @@
 
 #include "NEC.h"
 //私有定义
-#define MAX_RPS 10//限制rps输出幅度
-
+#define MAX_RPS 45.0//限制rps输出幅度
+#define MIN_RPS 0.0
 //
 #define BOUNDARY 45.0
 //私有变量及其初始化
 //PID系数
-float g_L_Kp = 0.8;
-float g_R_Kp = 0.8;
+float g_L_Kp = 12.4 * 0.7;
+float g_R_Kp = 8.4 * 0.7;  //*70%
 //
-float g_L_Ki = 0.01;
-float g_R_Ki = 0.01;
+float g_L_Ki = 30.0 * 1.5;
+float g_R_Ki = 30.0 * 1.5;  //*150%
 //
-float g_L_Kd = 0.00;
-float g_R_Kd = 0.00;
+float g_L_Kd = 0.01;  //左边的不用乘以0.3了，感觉已经调好了
+float g_R_Kd = 0.06 * 0.3;  //*30%
 
-#define MAX_INTEGRAL (100.0)
-#define MIN_INTEGRAL (-100.0)
+//#define MAX_INTEGRAL (100.0)
+//#define MIN_INTEGRAL (-100.0)
 
 //在地板上的时候的rps与PWM的关系
-float g_L_A0 = 0.01370;  //rps = A*PWM + B
-float g_L_B0 = -0.41874;
-float g_R_A0 = 0.01267;
-float g_R_B0 = 0.15181;
+float g_L_A0 = 0.09777;  //rps = A*PWM + B
+float g_L_B0 = 0.0;
+float g_R_A0 = 0.09333;
+float g_R_B0 = 0.0;
 
-float g_L_RPS = .0;  //PID设定的RPS
+float g_L_RPS = 0.0;  //PID设定的RPS
 uint8_t g_L_Dir = 1;
-float g_L_Pre_Err = .0;
-float g_L_Integral = .0;
-float g_R_RPS = .0;
+float g_L_Pre_Err = 0.0;
+float g_L_Integral = 0.0;
+float g_R_RPS = 0.0;
 uint8_t g_R_Dir = 1;
-float g_R_Pre_Err = .0;
-float g_R_Integral = .0;
+float g_R_Pre_Err = 0.0;
+float g_R_Integral = 0.0;
 float g_Sum_RPS = 0;
 
 //当前PWM脉宽
@@ -68,11 +68,6 @@ extern uint16_t g_R_Cur_PWM;
 //
 extern float g_L_Sample_RPS;
 extern float g_R_Sample_RPS;
-//
-extern uint8_t UART_counter;
-//
-extern uint8_t NEC_LED_G;
-extern uint8_t NEC_Time_Ticks;
 //超时计数
 uint8_t PID_G = 0;
 extern uint8_t Motor_G;
@@ -82,6 +77,7 @@ uint8_t PID_Ticks = 0;
 //两边转速差
 #define PID_BALANCE_START_TIMEOUT 80
 uint8_t diff_ticks = 0;
+#define abs(x) ((x)>0?(x):(-x))
 uint8_t diff_counter = 0;
 float diff_rps = 0;  //两边转速差
 float diff_Kp = 0.3;  //调整系数
@@ -100,33 +96,41 @@ uint16_t success_count = 0;
 //调用这个函数即可
 void PID_Move(uint8_t l_Dir, uint8_t r_Dir, float l_RPS, float r_RPS) {
   Motor_G = 1;
-  //防止为负数
-  if (l_RPS < 0)
-    l_RPS = 0;
-  if (r_RPS < 0)
-    r_RPS = 0;
   //限幅，不要超过MAX_RPS
-  if (l_RPS > MAX_RPS)
-    l_RPS = MAX_RPS;
-  if (r_RPS > MAX_RPS)
-    r_RPS = MAX_RPS;
+  l_RPS = PID_Protect_RPS(l_RPS);
+  r_RPS = PID_Protect_RPS(r_RPS);
   //
   g_L_Dir = l_Dir;
   g_L_RPS = l_RPS;
   g_R_Dir = r_Dir;
   g_R_RPS = r_RPS;
-  //
-  g_Sum_RPS = g_L_RPS + g_R_RPS;
-}
-
-//PID控制开始，即响应PID定时器中断
-void PID_Start(void) {
+  Motor_SetDir(l_Dir, r_Dir);
   PID_G = 1;
   //先设定RPS
   PID_Set_Left_RPS(g_L_Dir, g_L_RPS);
   PID_Set_Right_RPS(g_R_Dir, g_R_RPS);
-  //再开启中断
+  //PID控制开始，即响应PID定时器中断
   TimerIntEnable(PID_TIMER, TIMER_TIMA_TIMEOUT);
+  //
+//  g_Sum_RPS = g_L_RPS + g_R_RPS;
+//  PID_Protect();
+}
+
+//PID控制结束，并让电机停止运行
+void PID_Stop(void) {
+  TimerIntDisable(PID_TIMER, TIMER_TIMA_TIMEOUT);
+  PID_G = 0;
+  Motor_G = 0;
+  PID_Param_Clear();
+  Motor_SetDir(1, 1);
+  Motor_SetPWM_And_Move(1, 1);
+}
+
+void PID_Protect(void) {
+  if ((g_L_RPS < 0) || (g_R_RPS < 0)) {
+    g_L_RPS = g_Sum_RPS / 2;
+    g_R_RPS = g_Sum_RPS / 2;
+  }
 }
 
 void PIDTimerIntHandler(void) {
@@ -135,63 +139,64 @@ void PIDTimerIntHandler(void) {
   //PID反馈控制算法（只能保证稳定，还不能保证两边速度一致）
   PID_Cali_Left_RPS();
   PID_Cali_Right_RPS();
-  diff_counter++;
-  diff_ticks++;
-  //平衡算法800mS后开始
-  if (diff_ticks >= PID_BALANCE_START_TIMEOUT) {
-    diff_ticks = 0;
-    //10分频
-    if (diff_counter >= 1) {
-      diff_counter = 0;
-      diff_rps = g_L_Sample_RPS - g_R_Sample_RPS;
-//        if (diff_rps<MIN_RPS_DIFF) diff_rps=MIN_RPS_DIFF;
-//        if (diff_rps>MAX_RPS_DIFF) diff_rps=MAX_RPS_DIFF;
-      if (0 == success_flag) {
-        if (diff_rps > 1) {
-          adj = 0.5 * diff_rps;
-          //粗调
-          PID_Move(g_L_Dir, g_R_Dir, g_L_RPS - adj, g_R_RPS + adj);
-        } else if (diff_rps > 0.5) {
-          adj = 0.1 * diff_rps;
-          //微调
-          PID_Move(g_L_Dir, g_R_Dir, g_L_RPS - adj, g_R_RPS + adj);
-        } else if (diff_rps > 0.1) {
-          adj = 0.05 * diff_rps;
-          PID_Move(g_L_Dir, g_R_Dir, g_L_RPS - adj, g_R_RPS + adj);
-        }
-        //        else if (diff_rps>0.05){
-        //            adj = 0.01;
-        //            PID_Move(g_L_Dir,g_R_Dir,g_Sum_RPS/2-adj,g_Sum_RPS/2+adj);
-        //        }
-        else {
-          adj = 0;
-          if (g_L_Sample_RPS > 2) {
-            success_count++;
-            //TODO 记录此时的Setted_RPS和PWM
-            if (success_count >= 1000)
-              success_flag = 0;
-            if (success_flag) {
-              UARTprintf("Adjust Successfully!!!\n");
-              UARTprintf("Left Setted RPS: %d\n", (uint16_t) (g_L_RPS * 100));
-              UARTprintf("Right Setted RPS: %d\n", (uint16_t) (g_R_RPS * 100));
-              UARTprintf("Left 100*rps:  %d\n",
-                         (uint32_t) (g_L_Sample_RPS * 100));
-              UARTprintf("Right 100*rps: %d\n",
-                         (uint32_t) (g_R_Sample_RPS * 100));
-            }
-          }
-          PID_Move(g_L_Dir, g_R_Dir, g_L_RPS - adj, g_R_RPS + adj);
-        }
-      }
-//        diff_Integral += diff_rps*PID_DELAY_TIME/1000;
-//        diff_deri = (diff_rps - pre_diff_rps)/PID_DELAY_TIME*1000;
-//        pre_diff_rps = diff_rps;
-//        adj = diff_Kp*diff_rps+diff_Ki*diff_Integral+diff_Kd*diff_deri;
-//        if (adj<0) adj=-adj;
-//        if (adj>MAX_ADJ) adj=MAX_ADJ;
-//        PID_Move(g_L_Dir,g_R_Dir,g_Sum_RPS/2-adj,g_Sum_RPS/2+adj);
-    }
-  }
+  /*diff_counter++;
+   diff_ticks++;
+   //平衡算法800mS后开始
+   if (diff_ticks >= PID_BALANCE_START_TIMEOUT) {
+   diff_ticks = 0;
+   //10分频
+   if (diff_counter >= 10) {
+   diff_counter = 0;
+   diff_rps = g_L_Sample_RPS - g_R_Sample_RPS;
+   //        if (diff_rps<MIN_RPS_DIFF) diff_rps=MIN_RPS_DIFF;
+   //        if (diff_rps>MAX_RPS_DIFF) diff_rps=MAX_RPS_DIFF;
+   if (0 == success_flag) {
+   if (abs(diff_rps) > 1) {
+   adj = 0.1 * diff_rps;
+   //粗调
+   PID_Move(g_L_Dir, g_R_Dir, g_L_RPS - adj, g_R_RPS + adj);
+   } else if (abs(diff_rps) > 0.5) {
+   adj = 0.1 * diff_rps;
+   //微调
+   PID_Move(g_L_Dir, g_R_Dir, g_L_RPS - adj, g_R_RPS + adj);
+   } else if (abs(diff_rps) > 0.1) {
+   adj = 0.05 * diff_rps;
+   PID_Move(g_L_Dir, g_R_Dir, g_L_RPS - adj, g_R_RPS + adj);
+   }
+   //        else if (diff_rps>0.05){
+   //            adj = 0.01;
+   //            PID_Move(g_L_Dir,g_R_Dir,g_Sum_RPS/2-adj,g_Sum_RPS/2+adj);
+   //        }
+   else {
+   adj = 0;
+   if (g_L_Sample_RPS > 2) {
+   success_count++;
+   //TODO 记录此时的Setted_RPS和PWM
+   if (success_count >= 1000)
+   success_flag = 0;
+   if (success_flag) {
+   UARTprintf("Adjust Successfully!!!\n");
+   UARTprintf("Left Setted RPS: %d\n", (uint16_t) (g_L_RPS * 100));
+   UARTprintf("Right Setted RPS: %d\n", (uint16_t) (g_R_RPS * 100));
+   UARTprintf("Left 100*rps:  %d\n",
+   (uint32_t) (g_L_Sample_RPS * 100));
+   UARTprintf("Right 100*rps: %d\n",
+   (uint32_t) (g_R_Sample_RPS * 100));
+   }
+   }
+   PID_Move(g_L_Dir, g_R_Dir, g_L_RPS - adj, g_R_RPS + adj);
+   }
+   }
+   //        diff_Integral += diff_rps*PID_DELAY_TIME/1000;
+   //        diff_deri = (diff_rps - pre_diff_rps)/PID_DELAY_TIME*1000;
+   //        pre_diff_rps = diff_rps;
+   //        adj = diff_Kp*diff_rps+diff_Ki*diff_Integral+diff_Kd*diff_deri;
+   //        if (adj<0) adj=-adj;
+   //        if (adj>MAX_ADJ) adj=MAX_ADJ;
+   //        PID_Move(g_L_Dir,g_R_Dir,g_Sum_RPS/2-adj,g_Sum_RPS/2+adj);
+   }
+   }
+   */
 }
 
 //rps-PWM线性函数
@@ -224,13 +229,8 @@ void PID_Set_Left_RPS(uint8_t dir, float rps) {
     LeftMotor_Backward
     ;
   PWM = PID_Left_RPS_To_PWM(rps);
-  //限制PWM幅度
-  if (PWM < 0)
-    PWM = -PWM;
-  if (PWM > MAX_PWM)
-    PWM = MAX_PWM;
+  //限制PWM幅度，在Motor中已经做了
   width = (uint16_t) PWM;
-  g_L_Cur_PWM = width;
   Motor_Left_PWM_Width(width);
 }
 
@@ -244,13 +244,8 @@ void PID_Set_Right_RPS(uint8_t dir, float rps) {
     RightMotor_Backward
     ;
   PWM = PID_Right_RPS_To_PWM(rps);
-  //限制PWM幅度
-  if (PWM < 0)
-    PWM = -PWM;
-  if (PWM > MAX_PWM)
-    PWM = MAX_PWM;
+  //限制PWM幅度，在Motor中已经做了
   width = (uint16_t) PWM;
-  g_R_Cur_PWM = width;
   Motor_Right_PWM_Width(width);
 }
 
@@ -292,8 +287,7 @@ void PID_Cali_Left_RPS(void) {
   output = g_L_RPS + g_L_Kp * error + g_L_Ki * g_L_Integral
       + g_L_Kd * derivative;
   //限幅输出
-  if (output > MAX_RPS)
-    output = MAX_RPS;
+  output = PID_Protect_RPS(output);
   PID_Set_Left_RPS(g_L_Dir, output);
 }
 
@@ -311,36 +305,40 @@ void PID_Cali_Right_RPS(void) {
   output = g_R_RPS + g_R_Kp * error + g_R_Ki * g_R_Integral
       + g_R_Kd * derivative;
   //限幅输出
-  if (output > MAX_RPS)
-    output = MAX_RPS;
+  output = PID_Protect_RPS(output);
   PID_Set_Right_RPS(g_R_Dir, output);
-}
-
-//PID控制结束
-void PID_Stop(void) {
-  TimerIntDisable(PID_TIMER, TIMER_TIMA_TIMEOUT);
-  PID_G = 0;
-  Motor_G = 0;
 }
 
 //PID超时
 void PID_Check_Timeout(void) {
-  if (PID_G) {
-    PID_Ticks++;
-  } else {
-    PID_Ticks = 0;
-  }
-  //500mS清空一次误差
-  if (PID_Ticks >= PID_CLEAR_TIMEOUT) {
-    PID_Ticks = 0;
-    //清空误差
-    g_L_Pre_Err = .0;
-    g_L_Integral = .0;
-    g_R_Pre_Err = .0;
-    g_R_Integral = .0;
-    //
-    pre_diff_rps = 0;
-    diff_Integral = 0;
-    diff_deri = 0;
-  }
+  /*if (PID_G) {
+   PID_Ticks++;
+   } else {
+   PID_Ticks = 0;
+   }
+   //500mS清空一次误差
+   if (PID_Ticks >= PID_CLEAR_TIMEOUT) {
+   PID_Ticks = 0;
+   //清空误差
+   PID_Param_Clear();
+   }*/
+}
+
+void PID_Param_Clear(void) {
+  g_L_Pre_Err = .0;
+  g_L_Integral = .0;
+  g_R_Pre_Err = .0;
+  g_R_Integral = .0;
+  //
+  pre_diff_rps = 0;
+  diff_Integral = 0;
+  diff_deri = 0;
+}
+
+float PID_Protect_RPS(float rps) {
+  if (rps < MIN_RPS)
+    rps = MIN_RPS;
+  else if (rps > MAX_RPS)
+    rps = MAX_RPS;
+  return rps;
 }

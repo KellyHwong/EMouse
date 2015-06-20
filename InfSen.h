@@ -19,6 +19,9 @@
 #include "inc/tm4c123gh6pm.h"
 
 //TODO 写光传感器感知状态的定义
+
+
+
 #define RIGHT_AHEAD 16
 #define LITTLE_LEFT
 #define MIDDLE_LEFT

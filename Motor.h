@@ -14,6 +14,7 @@
 #define SMALL_WHEEL 15
 
 #define MAX_PWM 450//
+#define MIN_PWM 1
 
 #define QEI_LEFT_MOTOR_FORWARD (-1)//这些好像没什么用
 #define QEI_LEFT_MOTOR_BACKWARD (1)
@@ -50,8 +51,8 @@ inline void Motor_Sample_RPS(void);
 void Motor_Init_PWM(void);
 void Motor_Init(void);
 void Motor_Init_QEI(void);
-void Motor_Left_PWM_Width(uint32_t);
-void Motor_Right_PWM_Width(uint32_t);
+void Motor_Left_PWM_Width(uint16_t);
+void Motor_Right_PWM_Width(uint16_t);
 void Motor_Move(uint8_t, uint8_t, uint16_t, uint16_t);
 
 //
@@ -64,5 +65,5 @@ void Motor_SetDir(uint8_t leftCtl, uint8_t rightCtl);
 void Motor_SetPWM_Not_Move(uint16_t leftWidth, uint16_t rightWidth);
 void Motor_SetPWM_And_Move(uint16_t leftWidth, uint16_t rightWidth);
 void Motor_Print_Data(void);
-
+uint16_t Motor_PWM_Width_Protect(uint16_t width);
 #endif
