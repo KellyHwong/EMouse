@@ -19,6 +19,7 @@ UART0.obj: D:/Cygwin64/home/HuangKan/TivaWare/inc/hw_nvic.h
 UART0.obj: D:/Cygwin64/home/HuangKan/TivaWare/inc/hw_ints.h
 UART0.obj: D:/Cygwin64/home/HuangKan/TivaWare/utils/uartstdio.h
 UART0.obj: D:/Program\ Files\ (x86)/ti/ccsv6/tools/compiler/ti-cgt-arm_5.2.2/include/stdarg.h
+UART0.obj: ../Motor.h
 
 ../UART0.c: 
 ../UART0.h: 
@@ -39,3 +40,4 @@ D:/Cygwin64/home/HuangKan/TivaWare/inc/hw_nvic.h:
 D:/Cygwin64/home/HuangKan/TivaWare/inc/hw_ints.h: 
 D:/Cygwin64/home/HuangKan/TivaWare/utils/uartstdio.h: 
 D:/Program\ Files\ (x86)/ti/ccsv6/tools/compiler/ti-cgt-arm_5.2.2/include/stdarg.h: 
+../Motor.h: 

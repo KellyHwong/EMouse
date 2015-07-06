@@ -9,12 +9,16 @@ CG_TOOL_ROOT := D:/Program Files (x86)/ti/ccsv6/tools/compiler/ti-cgt-arm_5.2.2
 ORDERED_OBJS += \
 "./EMouse.obj" \
 "./InfSen.obj" \
+"./MotionControl.obj" \
 "./Motor.obj" \
 "./NEC.obj" \
 "./PID.obj" \
+"./Sch.obj" \
 "./Seg.obj" \
 "./UART0.obj" \
+"./bluetooth.obj" \
 "./interrupt.obj" \
+"./timer.obj" \
 "./tm4c123gh6pm_startup_ccs.obj" \
 "./uartstdio.obj" \
 "D:/Cygwin64/home/HuangKan/TivaWare/driverlib/ccs/Debug/driverlib.lib" \
@@ -156,8 +160,9 @@ EMouse.hex: $(EXE_OUTPUTS)
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)$(BIN_OUTPUTS__QUOTED)
-	-$(RM) "EMouse.pp" "InfSen.pp" "Motor.pp" "NEC.pp" "PID.pp" "Seg.pp" "UART0.pp" "interrupt.pp" "tm4c123gh6pm_startup_ccs.pp" "uartstdio.pp" 
-	-$(RM) "EMouse.obj" "InfSen.obj" "Motor.obj" "NEC.obj" "PID.obj" "Seg.obj" "UART0.obj" "interrupt.obj" "tm4c123gh6pm_startup_ccs.obj" "uartstdio.obj" 
+	-$(RM) "bluetooth.pp" 
+	-$(RM) "EMouse.pp" "InfSen.pp" "MotionControl.pp" "Motor.pp" "NEC.pp" "PID.pp" "Sch.pp" "Seg.pp" "UART0.pp" "interrupt.pp" "timer.pp" "tm4c123gh6pm_startup_ccs.pp" "uartstdio.pp" 
+	-$(RM) "EMouse.obj" "InfSen.obj" "MotionControl.obj" "Motor.obj" "NEC.obj" "PID.obj" "Sch.obj" "Seg.obj" "UART0.obj" "bluetooth.obj" "interrupt.obj" "timer.obj" "tm4c123gh6pm_startup_ccs.obj" "uartstdio.obj" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

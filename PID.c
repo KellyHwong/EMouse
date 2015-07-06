@@ -18,7 +18,6 @@
 #include "driverlib/interrupt.h"
 #include "driverlib/rom.h"
 #include "driverlib/qei.h"
-
 #include "Port.h"
 #include "Motor.h"
 #include "driverlib/qei.h"

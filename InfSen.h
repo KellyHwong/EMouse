@@ -19,8 +19,40 @@
 #include "inc/tm4c123gh6pm.h"
 
 //TODO 写光传感器感知状态的定义
-
-
+#define OUT_OF_LINE 0  //全0，不在线上
+#define LEFT_ON_LINE 1  //
+#define RIGHT_ON_LINE 2  //
+#define PERPENDICULAR_WITH_LINE_1 3  //中间与线垂直
+#define CASE4 4  //
+#define CASE5 5  //
+#define CASE6 6  //
+#define CASE7 7  //
+#define CASE8 8
+#define CASE9 9
+#define CASE10 10
+#define CASE11 11
+#define PERPENDICULAR_WITH_LINE_2 12  //下方与线垂直
+#define CASE13 13
+#define CASE14 14
+#define CASE15 15
+//走正，但是也有可能是和线垂直，取决于下一步的状态；
+//如果下一步是走正则继续走，否则遇到了垂直的情况（case3），就转弯来回到走正的状态
+#define GO_STRAIGHT 16
+#define CASE17 17
+#define CASE18 18
+#define CASE19 19
+#define CASE20 20
+#define CASE21 21
+#define CASE22 22
+#define CASE23 23
+#define CASE24 24
+#define CASE25 25
+#define CASE26 26
+#define CASE27 27
+#define CASE28 28
+#define CASE29 29
+#define CASE30 30
+#define CASE31 31
 
 #define RIGHT_AHEAD 16
 #define LITTLE_LEFT

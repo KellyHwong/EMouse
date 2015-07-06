@@ -29,6 +29,8 @@
 #include "UART0.h"
 #include "utils/uartstdio.h"
 
+#include "InfSen.h"
+
 #include "NEC.h"
 #include "PID.h"
 
@@ -38,6 +40,7 @@ void Sch_Timer_ISR(void)
 {
     //合作式调度器，10mS调度一次
     TimerIntClear(SCH_TIMER, TIMER_TIMA_TIMEOUT);
+    InfSen_Read();
     //数码管输出设置，见Seg.c
     Seg_Update();
     //NEC的LED超时设置

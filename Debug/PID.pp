@@ -26,6 +26,7 @@ PID.obj: ../Seg.h
 PID.obj: ../UART0.h
 PID.obj: D:/Cygwin64/home/HuangKan/TivaWare/utils/uartstdio.h
 PID.obj: D:/Program\ Files\ (x86)/ti/ccsv6/tools/compiler/ti-cgt-arm_5.2.2/include/stdarg.h
+PID.obj: ../NEC.h
 
 ../PID.c: 
 ../PID.h: 
@@ -53,3 +54,4 @@ D:/Cygwin64/home/HuangKan/TivaWare/inc/tm4c123gh6pm.h:
 ../UART0.h: 
 D:/Cygwin64/home/HuangKan/TivaWare/utils/uartstdio.h: 
 D:/Program\ Files\ (x86)/ti/ccsv6/tools/compiler/ti-cgt-arm_5.2.2/include/stdarg.h: 
+../NEC.h: 

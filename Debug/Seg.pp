@@ -17,6 +17,9 @@ Seg.obj: D:/Cygwin64/home/HuangKan/TivaWare/driverlib/pin_map.h
 Seg.obj: D:/Cygwin64/home/HuangKan/TivaWare/driverlib/pwm.h
 Seg.obj: D:/Cygwin64/home/HuangKan/TivaWare/driverlib/timer.h
 Seg.obj: D:/Cygwin64/home/HuangKan/TivaWare/driverlib/interrupt.h
+Seg.obj: ../InfSen.h
+Seg.obj: D:/Cygwin64/home/HuangKan/TivaWare/inc/hw_gpio.h
+Seg.obj: D:/Cygwin64/home/HuangKan/TivaWare/inc/tm4c123gh6pm.h
 
 ../Seg.c: 
 ../Seg.h: 
@@ -35,3 +38,6 @@ D:/Cygwin64/home/HuangKan/TivaWare/driverlib/pin_map.h:
 D:/Cygwin64/home/HuangKan/TivaWare/driverlib/pwm.h: 
 D:/Cygwin64/home/HuangKan/TivaWare/driverlib/timer.h: 
 D:/Cygwin64/home/HuangKan/TivaWare/driverlib/interrupt.h: 
+../InfSen.h: 
+D:/Cygwin64/home/HuangKan/TivaWare/inc/hw_gpio.h: 
+D:/Cygwin64/home/HuangKan/TivaWare/inc/tm4c123gh6pm.h: 

@@ -23,6 +23,9 @@
 #include "PID.h"
 #include "Port.h"
 #include "Sch.h"
+#include "bluetooth.h"
+
+#include "MotionControl.h"
 
 //PID的外部变量
 extern float g_L_RPS;
@@ -34,12 +37,15 @@ extern uint16_t g_R_Cur_PWM;
 extern float g_L_Kp;
 extern float g_R_Kp;
 
+extern uint8_t InfSenValue;
+
 int main(void) {
   //
   EMouse_Init();
-  //
+  // 能走直，就用这个了
+  // PID_Move(1,1,20,20);
   while (1) {
-    // Do nothing
+    MotionControl(InfSenValue);
   }
   return 1;
 }

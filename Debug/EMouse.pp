@@ -19,6 +19,7 @@ EMouse.obj: D:/Cygwin64/home/HuangKan/TivaWare/driverlib/interrupt.h
 EMouse.obj: D:/Cygwin64/home/HuangKan/TivaWare/utils/uartstdio.h
 EMouse.obj: D:/Program\ Files\ (x86)/ti/ccsv6/tools/compiler/ti-cgt-arm_5.2.2/include/stdarg.h
 EMouse.obj: D:/Cygwin64/home/HuangKan/TivaWare/inc/tm4c123gh6pm.h
+EMouse.obj: D:/Cygwin64/home/HuangKan/TivaWare/driverlib/timer.h
 EMouse.obj: ../EMouse.h
 EMouse.obj: ../Motor.h
 EMouse.obj: ../NEC.h
@@ -28,6 +29,9 @@ EMouse.obj: ../Seg.h
 EMouse.obj: ../UART0.h
 EMouse.obj: ../PID.h
 EMouse.obj: ../Port.h
+EMouse.obj: ../Sch.h
+EMouse.obj: ../bluetooth.h
+EMouse.obj: ../MotionControl.h
 
 ../EMouse.c: 
 D:/Program\ Files\ (x86)/ti/ccsv6/tools/compiler/ti-cgt-arm_5.2.2/include/stdint.h: 
@@ -48,6 +52,7 @@ D:/Cygwin64/home/HuangKan/TivaWare/driverlib/interrupt.h:
 D:/Cygwin64/home/HuangKan/TivaWare/utils/uartstdio.h: 
 D:/Program\ Files\ (x86)/ti/ccsv6/tools/compiler/ti-cgt-arm_5.2.2/include/stdarg.h: 
 D:/Cygwin64/home/HuangKan/TivaWare/inc/tm4c123gh6pm.h: 
+D:/Cygwin64/home/HuangKan/TivaWare/driverlib/timer.h: 
 ../EMouse.h: 
 ../Motor.h: 
 ../NEC.h: 
@@ -57,3 +62,6 @@ D:/Cygwin64/home/HuangKan/TivaWare/inc/hw_ints.h:
 ../UART0.h: 
 ../PID.h: 
 ../Port.h: 
+../Sch.h: 
+../bluetooth.h: 
+../MotionControl.h: 

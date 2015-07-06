@@ -22,6 +22,7 @@ NEC.obj: ../PID.h
 NEC.obj: D:/Cygwin64/home/HuangKan/TivaWare/utils/uartstdio.h
 NEC.obj: D:/Program\ Files\ (x86)/ti/ccsv6/tools/compiler/ti-cgt-arm_5.2.2/include/stdarg.h
 NEC.obj: D:/Cygwin64/home/HuangKan/TivaWare/driverlib/qei.h
+NEC.obj: ../UART0.h
 NEC.obj: D:/Cygwin64/home/HuangKan/TivaWare/inc/hw_types.h
 NEC.obj: D:/Cygwin64/home/HuangKan/TivaWare/driverlib/timer.h
 NEC.obj: D:/Cygwin64/home/HuangKan/TivaWare/driverlib/interrupt.h
@@ -49,6 +50,7 @@ D:/Cygwin64/home/HuangKan/TivaWare/inc/tm4c123gh6pm.h:
 D:/Cygwin64/home/HuangKan/TivaWare/utils/uartstdio.h: 
 D:/Program\ Files\ (x86)/ti/ccsv6/tools/compiler/ti-cgt-arm_5.2.2/include/stdarg.h: 
 D:/Cygwin64/home/HuangKan/TivaWare/driverlib/qei.h: 
+../UART0.h: 
 D:/Cygwin64/home/HuangKan/TivaWare/inc/hw_types.h: 
 D:/Cygwin64/home/HuangKan/TivaWare/driverlib/timer.h: 
 D:/Cygwin64/home/HuangKan/TivaWare/driverlib/interrupt.h: 

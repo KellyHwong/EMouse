@@ -7,6 +7,10 @@
 
 #include "InfSen.h"
 
+//TODO 写红外感应控制状态机
+
+uint8_t InfSenValue;
+
 void InfSen_Init(void) {
   //
   SysCtlPeripheralEnable(IN_SEN_1_PERIPH);
@@ -52,5 +56,8 @@ uint8_t InfSen_Read(void) {
     ui8Value += 8;
   if (GPIOPinRead(IN_SEN_5_PORT, IN_SEN_5_PIN))
     ui8Value += 16;
+
+  InfSenValue = ui8Value;
+
   return ui8Value;
 }
